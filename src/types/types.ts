@@ -1,13 +1,22 @@
+export type Category = "badminton" | "pickleball" | "tennis";
+
+export interface Branch {
+  id: string;
+  name: string;
+}
 
 export interface Product {
   id: string;
   name: string;
   brand: string;
-  price: number;
+  originalPrice: number;
+  currentPrice: number;
   image: string;
   tag?: string;
   discount?: number;
-  category: 'badminton' | 'pickleball' | 'tennis';
+  category: Category;
+  branchId?: string;
+  branch?: Branch;
 }
 
 export interface CategoryItem {
@@ -28,6 +37,21 @@ export interface NewsArticle {
 }
 
 export interface ChatMessage {
-  role: 'user' | 'model';
+  role: "user" | "model";
   text: string;
+}
+
+export interface FilterState {
+  categories: Category[];
+  discounts: number[];
+  priceRanges: string[];
+  brands?: string[];
+}
+
+export enum SortOption {
+  Featured = "Nổi bật nhất",
+  PriceAsc = "Giá tăng dần",
+  PriceDesc = "Giá giảm dần",
+  Newest = "Hàng mới về",
+  BestSeller = "Bán chạy nhất",
 }

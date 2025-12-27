@@ -1,16 +1,16 @@
 import CategoryGrid from "@/components/CategoryGrid";
 import Footer from "@/components/Footer";
-import Header from "@/components/Header";
 import NewsSection from "@/components/NewsSection";
-import Image from "next/image";
-import { CATEGORIES_BADMINTON, PRODUCTS } from '@/data/constants';
+import { CATEGORIES_BADMINTON, PRODUCTS } from "@/data/constants";
 import Hero from "@/components/Hero";
 import Benefits from "@/components/Benefits";
+import ProductCard from "@/components/ProductCard";
+import HeaderServer from "@/components/header/HeaderServer";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark">
-      <Header />
+      <HeaderServer />
 
       <main className="flex-grow">
         <Hero />
@@ -41,48 +41,7 @@ export default function Home() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {PRODUCTS.map((product) => (
-                <div
-                  key={product.id}
-                  className="group bg-orange-50 dark:bg-[#1e0e0e] rounded-xl border-2 border-transparent hover:border-primary overflow-hidden transition-all duration-300 flex flex-col hover:shadow-xl hover:-translate-y-2"
-                >
-                  <div className="relative aspect-[4/5] overflow-hidden bg-white p-4">
-                    <img
-                      alt={product.name}
-                      className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                      src={product.image}
-                    />
-                    {product.tag && (
-                      <span className="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase shadow-md">
-                        {product.tag}
-                      </span>
-                    )}
-                    {product.discount && (
-                      <span className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase shadow-md">
-                        -{product.discount}%
-                      </span>
-                    )}
-                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
-                      <button className="bg-primary text-white w-10 h-10 rounded-full shadow-lg hover:bg-red-800 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[20px]">
-                          add_shopping_cart
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-5 flex flex-col flex-1">
-                    <div className="text-[11px] text-[#666] font-extrabold uppercase mb-2 tracking-wide">
-                      {product.brand}
-                    </div>
-                    <h3 className="text-base font-bold text-[#1c0d0d] dark:text-white line-clamp-2 leading-snug mb-3 hover:text-primary cursor-pointer transition-colors">
-                      {product.name}
-                    </h3>
-                    <div className="mt-auto pt-2 border-t border-orange-100 dark:border-gray-800">
-                      <span className="text-primary font-black text-xl">
-                        {product.price.toLocaleString("vi-VN")}₫
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           </div>
