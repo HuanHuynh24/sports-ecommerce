@@ -119,18 +119,6 @@ export default function HeaderClient({
         </div>
 
         <div className="flex items-center gap-4 flex-shrink-0">
-          <Link
-            href={isLoggedIn ? "/account" : "/login"}
-            className="flex flex-col items-center gap-1 group relative"
-          >
-            <div className="p-2.5 rounded-full bg-gray-50 dark:bg-[#2a1515] group-hover:bg-primary group-hover:text-white transition-all duration-300 text-[#333] dark:text-white shadow-sm">
-              <span className="material-symbols-outlined">person</span>
-            </div>
-            <span className="text-[10px] font-bold hidden lg:block uppercase tracking-wide group-hover:text-primary transition-colors">
-              {isLoggedIn ? "Tài khoản" : "Đăng nhập"}
-            </span>
-          </Link>
-
           <button className="flex flex-col items-center gap-1 group relative">
             <div className="relative p-2.5 rounded-full bg-gray-50 dark:bg-[#2a1515] group-hover:bg-primary group-hover:text-white transition-all duration-300 text-[#333] dark:text-white shadow-sm">
               <span className="material-symbols-outlined">shopping_cart</span>

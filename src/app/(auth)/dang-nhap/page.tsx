@@ -275,7 +275,11 @@ function LoginForm() {
           <Divider text="Hoặc tiếp tục với" />
 
           <div className="grid grid-cols-2 gap-3">
-            <SocialButton label="Google" icon={<GoogleIcon />} onClick={onGoogle} />
+            <SocialButton
+              label="Google"
+              icon={<GoogleIcon />}
+              onClick={onGoogle}
+            />
             <SocialButton
               label="Facebook"
               icon={<FacebookIcon />}
@@ -287,7 +291,7 @@ function LoginForm() {
             Chưa có tài khoản?{" "}
             <Link
               className="font-bold text-primary hover:text-primary-hover hover:underline transition-colors"
-              href="/register"
+              href="/dang-ky"
             >
               Đăng ký ngay
             </Link>
@@ -303,9 +307,13 @@ export default function LoginPage() {
     <main className="relative flex min-h-100dvh">
       <Link
         href="/"
-        className="fixed top-4 right-4 z-50 inline-flex items-center gap-2 transition hover:text-primary"
+        className="fixed top-4 right-4 z-50 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-gray-800
+        shadow-md ring-1 ring-black/5 backdrop-blur hover:bg-white transition
+        dark:bg-[#2a1515]/90 dark:text-gray-100 dark:ring-white/10"
       >
-        <span className="material-symbols-outlined text-sm">arrow_back</span>
+        <span className="material-symbols-outlined text-[18px]">
+          arrow_back
+        </span>
         Về trang chủ
       </Link>
 

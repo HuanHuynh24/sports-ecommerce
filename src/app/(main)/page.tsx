@@ -10,8 +10,6 @@ import HeaderServer from "@/components/header/HeaderServer";
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark">
-      <HeaderServer />
-
       <main className="flex-grow">
         <Hero />
         <Benefits />
@@ -107,8 +105,6 @@ export default function Home() {
 
         <NewsSection />
       </main>
-
-      <Footer />
     </div>
   );
 }
