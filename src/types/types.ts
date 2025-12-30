@@ -55,3 +55,16 @@ export enum SortOption {
   Newest = "Hàng mới về",
   BestSeller = "Bán chạy nhất",
 }
+
+
+export interface CartItem {
+  id: string;
+  name: string;
+  category: string;
+  tag?: string;
+  spec?: string;
+  price: number;
+  originalPrice?: number;
+  qty: number;
+  imageUrl: string;
+};

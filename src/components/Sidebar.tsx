@@ -74,8 +74,7 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
 
   return (
     <aside className="w-full lg:w-[320px] shrink-0 space-y-6 self-start">
-
-      {/* Discounts */}
+      {/* Discounts
       {(data.discounts?.length ?? 0) > 0 && (
         <Section icon="percent" title="Mức giảm giá">
           <div className="space-y-3">
@@ -100,30 +99,7 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
             ))}
           </div>
         </Section>
-      )}
-
-      {/* Price */}
-      {(data.priceRanges?.length ?? 0) > 0 && (
-        <Section icon="attach_money" title="Khoảng giá">
-          <div className="space-y-3">
-            {data.priceRanges!.map((r) => (
-              <label
-                key={r.value}
-                className="flex items-center gap-3 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={filters.priceRanges.includes(r.value)}
-                  onChange={() => toggleArray("priceRanges", r.value)}
-                  className="w-5 h-5 rounded text-primary"
-                />
-                <span className="text-sm text-gray-700">{r.label}</span>
-              </label>
-            ))}
-          </div>
-        </Section>
-      )}
-
+      )} */}
       {/* Brands */}
       {(data.brands?.length ?? 0) > 0 && (
         <Section icon="branding_watermark" title="Thương hiệu">
@@ -164,6 +140,27 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
                 </label>
               );
             })}
+          </div>
+        </Section>
+      )}
+      {/* Price */}
+      {(data.priceRanges?.length ?? 0) > 0 && (
+        <Section icon="attach_money" title="Khoảng giá">
+          <div className="space-y-3">
+            {data.priceRanges!.map((r) => (
+              <label
+                key={r.value}
+                className="flex items-center gap-3 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={filters.priceRanges.includes(r.value)}
+                  onChange={() => toggleArray("priceRanges", r.value)}
+                  className="w-5 h-5 rounded text-primary"
+                />
+                <span className="text-sm text-gray-700">{r.label}</span>
+              </label>
+            ))}
           </div>
         </Section>
       )}

@@ -1,4 +1,4 @@
-import type { Product, Category, CategoryItem, NewsArticle } from "@/types/types";
+import type { Product, Category, CategoryItem, NewsArticle, CartItem } from "@/types/types";
 
 /* =========================
    CATEGORY (đúng enum)
@@ -167,5 +167,31 @@ export const NEWS: NewsArticle[] = [
     date: "22/05/2024",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuB4tk2XMF5_cmexTapRvvdSoSjB5H3L5VJcChq7ImiTigs6sf2YMhyO2ECqjXRp5OE1F5TwVhiiOHfXEWTlCEE9I5ttjHNDLAgENxgzzb_XRLCZiKo-UwsMIyg6d1lb7qiLVt7GKcq6y8cGkBwwAahsIsy8bKx8l2nNUCizyHUQwHqmKPeFTzXvFtqaDv7iY22BQeTiOZIAlc8_lVXEcqXY2VMWYW578cf0niudLkoY9GuAdV-U45-jocI_carMbVBmUbmb4MagTg",
+  },
+];
+
+
+export const initialItems: CartItem[] = [
+  {
+    id: "c1",
+    name: "Yonex Astrox 88D Pro",
+    category: "Rackets",
+    tag: "Hot",
+    spec: "Spec: 4U / G5",
+    price: 2500000,
+    originalPrice: 2800000,
+    qty: 1,
+    imageUrl:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBB7kXUCbuiATmVelLE6qaIFXoq6nwD_ISus-axdqXEsIRUbUWi_VtYwCZi6T4Cq81kXhjE-FvEzXnuTuhhfG5YQQynHggIiHQJJX_LAvhri6DmXgzcrvA7eNKQgg8Inv_KYeOWRbyoYrr_Iwc5pJJmbp1B89HU0Ulfk0HggZ2iw7EBP5aCdGdM7d7Dm0cw_o8yoCGwJDQRjWQuWgEFCwX8NDZRfuPiCuvOJFohqKn5zxJnOPcHERlIFg3y1pk-HgNSlCsKWLKU7Dg",
+  },
+  {
+    id: "c2",
+    name: "VNB Pro Badminton Shoes",
+    category: "Shoes",
+    spec: "Size: 41 | Color: Red/White",
+    price: 850000,
+    qty: 1,
+    imageUrl:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDVQ2wooKF0qBGo7GrqurNUIS7X9tHIWUHO1rfv52BZ7W5hHKq183zTpFyDtg9Cr1dju5X_fDHpNu3EIhU3RikPKwxV532hgayuPtzKc_r5q7Q4K3pmZwx7AVoZ45AzjcUCPkcXBTTgvMCmb8wNCUAooBvMwMSVhTYr_IJREYMmJikKCpmK9coke7_Tly_2jYYznPR49bkiFwSWoMNcZGVSYkdUfXzz4hBD5kTv-eqgjbWF_ft8hp7wP7nSS7p47J5DA3zFzYclarw",
   },
 ];
