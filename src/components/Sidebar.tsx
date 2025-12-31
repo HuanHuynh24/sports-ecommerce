@@ -142,7 +142,7 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
             })}
           </div>
         </Section>
-      )}
+      )}  
       {/* Price */}
       {(data.priceRanges?.length ?? 0) > 0 && (
         <Section icon="attach_money" title="Khoảng giá">
