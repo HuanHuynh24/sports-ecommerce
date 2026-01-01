@@ -1,42 +1,56 @@
-// src/components/HeaderClient.tsx
 "use client";
-
-import React from "react";
 import Link from "next/link";
-
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(
-    new RegExp("(^| )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]+)")
-  );
-  return match ? decodeURIComponent(match[2]) : null;
-}
+import { useEffect, useState } from "react";
 
 export default function HeaderClient({
   initialUsername,
 }: {
   initialUsername: string | null;
 }) {
-  const [username, setUsername] = React.useState<string | null>(initialUsername);
+  const [username, setUsername] = useState<string | null>(initialUsername);
 
-  React.useEffect(() => {
-    const refresh = () => setUsername(getCookie("username"));
+  useEffect(() => {
+    // Hàm lấy dữ liệu an toàn
+    const getUserFromStorage = () => {
+      try {
+        const stored = localStorage.getItem("user_info");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          return parsed?.username || parsed?.name || null; 
+        }
+      } catch (e) {
+        console.error("Lỗi parse user info", e);
+        localStorage.removeItem("user_info");
+      }
+      return null;
+    };
 
-    // Khi login/logout xong, bạn bắn event này để header cập nhật ngay
-    const onAuthChanged = () => refresh();
-    window.addEventListener("auth:changed", onAuthChanged);
+    // Hàm update state
+    const refresh = () => {
+      const currentName = getUserFromStorage();
+      // Chỉ update nếu giá trị thực sự thay đổi để tránh re-render thừa
+      setUsername((prev) => (prev !== currentName ? currentName : prev));
+    };
 
-    // Fallback: user quay lại tab sau redirect login
-    const onFocus = () => refresh();
-    window.addEventListener("focus", onFocus);
+    // 1. GỌI NGAY LẬP TỨC khi component mount để đồng bộ Client & Server
+    refresh();
+
+    // 2. Lắng nghe Custom Event (Login/Logout cùng tab)
+    window.addEventListener("auth:changed", refresh);
+
+    // 3. Lắng nghe Storage Event (Login/Logout từ TAB KHÁC)
+    // Sự kiện này tự động kích hoạt khi localStorage đổi ở tab khác
+    window.addEventListener("storage", refresh);
+
+    // 4. Fallback khi focus lại tab
+    window.addEventListener("focus", refresh);
 
     return () => {
-      window.removeEventListener("auth:changed", onAuthChanged);
-      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("auth:changed", refresh);
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("focus", refresh);
     };
   }, []);
-
-  const isLoggedIn = Boolean(username);
 
   return (
     <header className="w-full bg-white dark:bg-[#1e0e0e] shadow-lg shadow-gray-100/50 dark:shadow-none sticky top-0 z-50">
@@ -65,8 +79,8 @@ export default function HeaderClient({
             </Link>
             <span className="w-[1px] h-3 bg-gray-300 dark:bg-[#444]"></span>
 
-            {/* ✅ Auth UI (SSR đúng ngay từ đầu nhờ initialUsername) */}
-            {isLoggedIn ? (
+            {/*  Auth UI (SSR đúng ngay từ đầu nhờ initialUsername) */}
+            {username ? (
               <Link
                 className="hover:text-primary transition-colors font-semibold"
                 href="/account"
@@ -75,7 +89,10 @@ export default function HeaderClient({
                 Xin chào, <span className="font-black">{username}</span>
               </Link>
             ) : (
-              <Link className="hover:text-primary transition-colors" href="/dang-nhap">
+              <Link
+                className="hover:text-primary transition-colors"
+                href="/dang-nhap"
+              >
                 Đăng nhập
               </Link>
             )}
@@ -87,7 +104,12 @@ export default function HeaderClient({
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-4 flex flex-col md:flex-row items-center gap-4 md:gap-8">
         <Link className="flex items-center gap-2 group flex-shrink-0" href="/">
           <div className="w-12 h-12 text-primary">
-            <svg className="w-full h-full drop-shadow-sm" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              className="w-full h-full drop-shadow-sm"
+              fill="none"
+              viewBox="0 0 48 48"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <path
                 d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
                 fill="currentColor"
@@ -138,22 +160,34 @@ export default function HeaderClient({
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
           <ul className="flex items-center justify-between gap-1 text-sm font-bold uppercase tracking-wide">
             <li>
-              <Link className="block px-6 py-3.5 bg-red-900 border-b-4 border-accent" href="/">
+              <Link
+                className="block px-6 py-3.5 bg-red-900 border-b-4 border-accent"
+                href="/"
+              >
                 Trang chủ
               </Link>
             </li>
             <li className="flex-1 text-center">
-              <Link className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200" href="/vot-cau-long">
+              <Link
+                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
+                href="/vot-cau-long"
+              >
                 Vợt Cầu Lông
               </Link>
             </li>
             <li className="flex-1 text-center">
-              <Link className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200" href="#">
+              <Link
+                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
+                href="#"
+              >
                 Giày Thể Thao
               </Link>
             </li>
             <li className="flex-1 text-center">
-              <Link className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200 relative group" href="#">
+              <Link
+                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200 relative group"
+                href="#"
+              >
                 Pickleball
                 <span className="absolute top-1 right-2 text-[8px] bg-yellow-400 text-red-900 px-1 rounded">
                   HOT
@@ -161,22 +195,34 @@ export default function HeaderClient({
               </Link>
             </li>
             <li className="flex-1 text-center">
-              <Link className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200" href="#">
+              <Link
+                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
+                href="#"
+              >
                 Tennis
               </Link>
             </li>
             <li className="flex-1 text-center">
-              <Link className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200" href="#">
+              <Link
+                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
+                href="#"
+              >
                 Phụ kiện
               </Link>
             </li>
             <li className="flex-1 text-center">
-              <Link className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200" href="#">
+              <Link
+                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
+                href="#"
+              >
                 Tin tức
               </Link>
             </li>
             <li className="flex-1 text-center">
-              <Link className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200" href="#">
+              <Link
+                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
+                href="#"
+              >
                 Khuyến mãi
               </Link>
             </li>
