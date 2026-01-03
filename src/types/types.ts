@@ -93,3 +93,14 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+export interface CartItem {
+  id: string;
+  name: string;
+  category: string;
+  tag?: string;
+  spec?: string;
+  price: number;
+  originalPrice?: number;
+  qty: number;
+  imageUrl: string;
+};

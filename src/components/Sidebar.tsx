@@ -113,6 +113,7 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
 
   return (
     <aside className="w-full lg:w-[320px] shrink-0 space-y-6 self-start">
+<<<<<<< HEAD
       
       {/* 1. Categories */}
       {(data.categories?.length ?? 0) > 0 && (
@@ -135,12 +136,37 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
                 checked={(filters.categories ?? []).includes(c.value)}
                 onChange={() => toggleFilter("categories", c.value)}
               />
+=======
+      {/* Discounts
+      {(data.discounts?.length ?? 0) > 0 && (
+        <Section icon="percent" title="Mức giảm giá">
+          <div className="space-y-3">
+            {data.discounts!.map((d) => (
+              <label key={d} className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.discounts.includes(d)}
+                  onChange={() => toggleArray("discounts", d)}
+                  className="w-5 h-5 rounded text-primary"
+                />
+                <span
+                  className={`text-sm ${
+                    filters.discounts.includes(d)
+                      ? "font-bold text-primary"
+                      : "text-gray-700"
+                  }`}
+                >
+                  {d >= 60 ? "Trên 60%" : `Giảm ${d}%`}
+                </span>
+              </label>
+>>>>>>> feat/cart-page
             ))}
             {categoryOptions.length === 0 && (
               <p className="text-xs text-gray-500 text-center py-2">Không tìm thấy danh mục</p>
             )}
           </div>
         </Section>
+<<<<<<< HEAD
       )}
 
       {/* 2. Price Ranges */}
@@ -177,6 +203,10 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
       )}
 
       {/* 4. Brands */}
+=======
+      )} */}
+      {/* Brands */}
+>>>>>>> feat/cart-page
       {(data.brands?.length ?? 0) > 0 && (
         <Section icon="branding_watermark" title="Thương hiệu">
           <div className="relative mb-3">
@@ -200,6 +230,27 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
              {brandOptions.length === 0 && (
               <p className="text-xs text-gray-500 text-center py-2">Không tìm thấy thương hiệu</p>
             )}
+          </div>
+        </Section>
+      )}  
+      {/* Price */}
+      {(data.priceRanges?.length ?? 0) > 0 && (
+        <Section icon="attach_money" title="Khoảng giá">
+          <div className="space-y-3">
+            {data.priceRanges!.map((r) => (
+              <label
+                key={r.value}
+                className="flex items-center gap-3 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={filters.priceRanges.includes(r.value)}
+                  onChange={() => toggleArray("priceRanges", r.value)}
+                  className="w-5 h-5 rounded text-primary"
+                />
+                <span className="text-sm text-gray-700">{r.label}</span>
+              </label>
+            ))}
           </div>
         </Section>
       )}

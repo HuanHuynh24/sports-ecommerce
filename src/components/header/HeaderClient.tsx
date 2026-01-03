@@ -1,12 +1,40 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(
+    new RegExp(
+      "(^| )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]+)"
+    )
+  );
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+/** Active theo path:
+ * - exact: true => chỉ active khi pathname === href
+ * - exact: false => active khi pathname bắt đầu bằng href (dùng cho /vot-cau-long/xxx)
+ */
+function isActivePath(pathname: string, href: string, exact = false) {
+  if (href === "#") return false;
+  if (exact) return pathname === href;
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(href + "/");
+}
 
 export default function HeaderClient({
   initialUsername,
 }: {
   initialUsername: string | null;
 }) {
+  const pathname = usePathname();
+
   const [username, setUsername] = useState<string | null>(initialUsername);
 
   useEffect(() => {
@@ -52,6 +80,17 @@ export default function HeaderClient({
     };
   }, []);
 
+  const isLoggedIn = Boolean(username);
+
+  //  class active giống y hệt UI hiện tại của bạn
+  const navLinkClass = (href: string) =>
+    cx(
+      "block py-3.5 transition-colors",
+      isActivePath(pathname, href, href === "/")
+        ? "bg-red-900 border-b-4 border-accent"
+        : "hover:bg-red-700 hover:text-yellow-200"
+    );
+
   return (
     <header className="w-full bg-white dark:bg-[#1e0e0e] shadow-lg shadow-gray-100/50 dark:shadow-none sticky top-0 z-50">
       {/* Top Bar */}
@@ -79,8 +118,7 @@ export default function HeaderClient({
             </Link>
             <span className="w-[1px] h-3 bg-gray-300 dark:bg-[#444]"></span>
 
-            {/*  Auth UI (SSR đúng ngay từ đầu nhờ initialUsername) */}
-            {username ? (
+            {isLoggedIn ? (
               <Link
                 className="hover:text-primary transition-colors font-semibold"
                 href="/account"
@@ -141,17 +179,17 @@ export default function HeaderClient({
         </div>
 
         <div className="flex items-center gap-4 flex-shrink-0">
-          <button className="flex flex-col items-center gap-1 group relative">
+          <Link
+            href="/gio-hang"
+            className="flex flex-col items-center gap-1 group relative"
+          >
             <div className="relative p-2.5 rounded-full bg-gray-50 dark:bg-[#2a1515] group-hover:bg-primary group-hover:text-white transition-all duration-300 text-[#333] dark:text-white shadow-sm">
               <span className="material-symbols-outlined">shopping_cart</span>
               <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white dark:border-[#1e0e0e] shadow-sm">
                 3
               </span>
             </div>
-            <span className="text-[10px] font-bold hidden lg:block uppercase tracking-wide group-hover:text-primary transition-colors">
-              Giỏ hàng
-            </span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -160,33 +198,30 @@ export default function HeaderClient({
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
           <ul className="flex items-center justify-between gap-1 text-sm font-bold uppercase tracking-wide">
             <li>
-              <Link
-                className="block px-6 py-3.5 bg-red-900 border-b-4 border-accent"
-                href="/"
-              >
+              <Link className={cx("px-6", navLinkClass("/"))} href="/">
                 Trang chủ
               </Link>
             </li>
+
             <li className="flex-1 text-center">
               <Link
-                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
+                className={navLinkClass("/vot-cau-long")}
                 href="/vot-cau-long"
               >
                 Vợt Cầu Lông
               </Link>
             </li>
+
             <li className="flex-1 text-center">
-              <Link
-                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
-                href="#"
-              >
+              <Link className={navLinkClass("/giay-the-thao")} href="/giay-the-thao">
                 Giày Thể Thao
               </Link>
             </li>
+
             <li className="flex-1 text-center">
               <Link
-                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200 relative group"
-                href="#"
+                className={cx(navLinkClass("/pickleball"), "relative group")}
+                href="/pickleball"
               >
                 Pickleball
                 <span className="absolute top-1 right-2 text-[8px] bg-yellow-400 text-red-900 px-1 rounded">
@@ -194,35 +229,27 @@ export default function HeaderClient({
                 </span>
               </Link>
             </li>
+
             <li className="flex-1 text-center">
-              <Link
-                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
-                href="#"
-              >
+              <Link className={navLinkClass("/tennis")} href="/tennis">
                 Tennis
               </Link>
             </li>
+
             <li className="flex-1 text-center">
-              <Link
-                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
-                href="#"
-              >
+              <Link className={navLinkClass("/phu-kien")} href="/phu-kien">
                 Phụ kiện
               </Link>
             </li>
+
             <li className="flex-1 text-center">
-              <Link
-                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
-                href="#"
-              >
+              <Link className={navLinkClass("/tin-tuc")} href="/tin-tuc">
                 Tin tức
               </Link>
             </li>
+
             <li className="flex-1 text-center">
-              <Link
-                className="block py-3.5 hover:bg-red-700 transition-colors hover:text-yellow-200"
-                href="#"
-              >
+              <Link className={navLinkClass("/khuyen-mai")} href="/khuyen-mai">
                 Khuyến mãi
               </Link>
             </li>
