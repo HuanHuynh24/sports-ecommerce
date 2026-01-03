@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import { Inter } from "next/font/google";
 import HeaderServer from "@/components/header/HeaderServer";
 import Footer from "@/components/Footer";
+import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -33,6 +34,15 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} antialiased`}>
+        <NextTopLoader
+          color="#2299DD" // Màu của thanh loading (thay bằng màu primary của bạn)
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false} // Tắt cái vòng xoay xoay ở góc, chỉ để thanh ngang cho đẹp
+          shadow="0 0 10px #2299DD,0 0 5px #2299DD"
+        />
         <HeaderServer />
         {children}
 

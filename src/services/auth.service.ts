@@ -16,11 +16,21 @@ interface LoginPayload {
 export const authService = {
   // Hàm đăng ký
   register: (payload: RegisterPayload) => {
-    return axiosClient.post("/auth/register", payload);
+    return axiosClient.post("/v1/auth/register", payload);
   },
 
   // Hàm đăng nhập
   login: (payload: LoginPayload) => {
-    return axiosClient.post("/auth/login", payload);
+    return axiosClient.post("/v1/auth/login", payload);
+  },
+
+  // Hàm đăng xuất
+  logout: () => {
+    return axiosClient.post("/v1/auth/logout");
+  },
+
+  // Hàm đăng nhập với Google
+  loginWithGoogle: (token: string) => {
+    return axiosClient.post("/v1/auth/google/redirect");
   },
 };

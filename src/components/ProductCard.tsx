@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo } from "react";
+import Link from "next/link"; // 1. Import Link
 import type { Product } from "@/types/types";
 
 interface ProductCardProps {
@@ -18,13 +19,16 @@ const clamp = (n: number) => Math.max(0, Math.min(99, Math.round(n)));
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onView }) => {
   const discount = useMemo(() => {
     if (typeof product.discount === "number") return clamp(product.discount);
-    if (product.originalPrice > 0 && product.currentPrice < product.originalPrice) {
-      return clamp(((product.originalPrice - product.currentPrice) / product.originalPrice) * 100);
+    if (product.original_price > 0 && product.price < product.original_price) {
+      return clamp(((product.original_price - product.price) / product.original_price) * 100);
     }
     return undefined;
-  }, [product.discount, product.originalPrice, product.currentPrice]);
+  }, [product.discount, product.original_price, product.price]);
 
-  const hasSale = product.originalPrice > 0 && product.currentPrice < product.originalPrice;
+  const hasSale = product.original_price > 0 && product.price < product.original_price;
+  
+  // 2. Tạo đường dẫn chi tiết (slug hoặc id)
+  const productLink = `/vot-cau-long/${product.id}`;
 
   return (
     <article
@@ -37,20 +41,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onView 
         "hover:-translate-y-1 hover:shadow-[0_18px_45px_-26px_rgba(0,0,0,.55)]",
       ].join(" ")}
     >
-      {/* MEDIA */}
       <div className="relative aspect-square bg-[var(--color-surface-2)] dark:bg-[#1a0b0b]">
-        {/* subtle highlight */}
-        <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/18 via-black/0 to-white/10" />
+        {/* Lớp phủ gradient (giữ nguyên để tạo hiệu ứng hover đẹp) */}
+        <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/18 via-black/0 to-white/10 z-10" />
 
-        <img
-          src={product.image}
-          alt={product.name}
-          loading="lazy"
-          className="h-full w-full object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-[1.05]"
-        />
+        {/* 3. Bọc ảnh bằng Link */}
+        <Link href={productLink} className="block h-full w-full">
+          <img
+            src={product.thumbnail}
+            alt={product.name}
+            loading="lazy"
+            className="h-full w-full object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-[1.05]"
+          />
+        </Link>
 
-        {/* BADGES */}
-        <div className="absolute left-3 top-3 flex flex-col gap-2">
+        {/* BADGES (giữ nguyên vị trí tuyệt đối) */}
+        <div className="absolute left-3 top-3 flex flex-col gap-2 z-20 pointer-events-none">
           {typeof discount === "number" && discount > 0 && (
             <span className="inline-flex items-center rounded-full bg-[var(--color-primary)] text-white text-[11px] font-extrabold px-3 py-1 shadow-sm">
               -{discount}%
@@ -63,8 +69,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onView 
           )}
         </div>
 
-        {/* QUICK ACTION BAR (cân đối hơn) */}
-        <div className="absolute left-3 right-3 bottom-3">
+        {/* QUICK ACTION BAR */}
+        <div className="absolute left-3 right-3 bottom-3 z-30">
           <div className="flex items-center justify-end gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
             <button
               type="button"
@@ -93,7 +99,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onView 
 
       {/* CONTENT */}
       <div className="p-5">
-        {/* brand + dot */}
         <div className="flex items-center justify-between gap-3">
           <div className="text-[11px] font-extrabold uppercase tracking-wide text-black/55 dark:text-white/60">
             {product.brand}
@@ -101,25 +106,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onView 
           <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-primary)] shadow-[0_0_0_6px_var(--color-ring)]" />
         </div>
 
-        {/* name */}
-        <h3 className="mt-2 text-[15px] font-bold leading-6 text-black dark:text-white line-clamp-2">
-          {product.name}
+        {/* 4. Bọc tên sản phẩm bằng Link */}
+        <h3 className="mt-2 text-[15px] font-bold leading-6 line-clamp-2">
+          <Link 
+            href={productLink} 
+            className="text-black dark:text-white hover:text-[var(--color-primary)] transition-colors"
+          >
+            {product.name}
+          </Link>
         </h3>
 
-        {/* location */}
-        <div className="mt-2 text-[12px] font-semibold text-black/55 dark:text-white/55">
-          {product.location}
-        </div>
 
         {/* price + CTA */}
         <div className="mt-4 flex items-end justify-between gap-3 border-t border-black/5 dark:border-white/10 pt-4">
           <div className="min-w-0">
             <div className="text-[var(--color-primary)] font-black text-[20px] leading-none">
-              {formatCurrency(product.currentPrice)}
+              {formatCurrency(product.price)}
             </div>
             {hasSale && (
               <div className="mt-1 text-[12px] text-black/45 dark:text-white/45 line-through font-semibold">
-                {formatCurrency(product.originalPrice)}
+                {formatCurrency(product.original_price)}
               </div>
             )}
           </div>

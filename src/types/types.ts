@@ -9,9 +9,9 @@ export interface Product {
   id: string;
   name: string;
   brand: string;
-  originalPrice: number;
-  currentPrice: number;
-  image: string;
+  original_price: number;
+  price: number;
+  thumbnail: string;
   tag?: string;
   discount?: number;
   category: Category;
@@ -54,4 +54,42 @@ export enum SortOption {
   PriceDesc = "Giá giảm dần",
   Newest = "Hàng mới về",
   BestSeller = "Bán chạy nhất",
+}
+
+
+
+export interface Attribute {
+  [key: string]: string; // Ví dụ: { "Cán": "G5", "Trọng lượng": "4U" }
+}
+
+export interface Variant {
+  id: number;
+  sku: string;
+  attributes: Attribute;
+  price: number;
+  stock_qty: number;
+  image: string | null;
+}
+
+export interface ProductDetail {
+  id: number;
+  name: string;
+  sku: string;
+  thumbnail: string;
+  price: number;
+  original_price: number;
+  description: string;
+  category: { id: number; name: string };
+  brand: { id: number; name: string };
+  images: Array<{ id: number; url: string }>;
+  variants: Variant[];
+  location?: string; // Optional vì JSON mẫu không có, nhưng ProductCard có dùng
+  tag?: string;      // Optional
+  discount?: number; // Optional
+}
+
+export interface ApiResponse<T> {
+  status: boolean;
+  message: string;
+  data: T;
 }

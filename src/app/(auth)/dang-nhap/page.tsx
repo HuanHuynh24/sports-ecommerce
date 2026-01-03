@@ -175,11 +175,12 @@ export default function LoginPage() {
       });
 
       // Xử lý thành công
-      loginSuccess(res.data.user);  
+      console.log("Đăng nhập thành công:", res.data);
+      loginSuccess(res.data);  
       setIsSuccess(true);  
 
       setTimeout(() => {
-        router.push("/");
+        router.push("/"); 
       }, 1000);
 
     } catch (err: any) {
