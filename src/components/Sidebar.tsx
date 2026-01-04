@@ -1,6 +1,8 @@
 "use client";
+
 import React, { useMemo, useState } from "react";
-import type { FilterState, Category } from "@/types/types";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { Category } from "@/types/types";
 
 // --- Types ---
 type Option = { value: string; label: string; subLabel?: string };
@@ -13,12 +15,11 @@ type SidebarData = {
 };
 
 interface SidebarProps {
-  filters: FilterState;
-  setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   data: SidebarData;
+  // Đã xóa filters và setFilters để tránh lỗi "Functions cannot be passed directly..."
 }
 
-// --- Sub-components ---
+// --- Sub-components (Giữ nguyên giao diện cũ) ---
 function Section({
   icon,
   title,
@@ -76,29 +77,52 @@ function CheckboxItem({
 }
 
 // --- Main Component ---
-export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
+export default function Sidebar({ data }: SidebarProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // State local chỉ dùng để filter danh sách hiển thị (Input tìm kiếm)
   const [qCategory, setQCategory] = useState("");
   const [qBrand, setQBrand] = useState("");
 
-  // Hàm xử lý chung cho tất cả các mảng filter
-  // K extends keyof FilterState đảm bảo type safety
-  const toggleFilter = <K extends keyof FilterState>(
-    key: K,
-    value: any // Value khớp với kiểu dữ liệu trong mảng của key đó
-  ) => {
-    setFilters((prev) => {
-      const currentArray = (prev[key] as any[]) ?? [];
-      const exists = currentArray.includes(value);
-
-      return {
-        ...prev,
-        [key]: exists
-          ? currentArray.filter((item) => item !== value)
-          : [...currentArray, value],
-      };
-    });
+  // --- Logic xử lý URL ---
+  
+  // 1. Hàm kiểm tra xem 1 giá trị có đang được chọn trên URL không
+  const isChecked = (key: string, value: string | number) => {
+    // searchParams.getAll trả về mảng các giá trị (vd: ['yonex', 'lining'])
+    return searchParams.getAll(key).includes(String(value));
   };
 
+  // 2. Hàm thay đổi URL khi user click
+  const toggleFilter = (key: string, value: string | number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const strValue = String(value);
+
+    const currentValues = params.getAll(key);
+
+    // Nếu đã có -> Xóa đi
+    if (currentValues.includes(strValue)) {
+      params.delete(key);
+      // Add lại các giá trị còn lại (trừ giá trị vừa xóa)
+      currentValues
+        .filter((v) => v !== strValue)
+        .forEach((v) => params.append(key, v));
+    } 
+    // Nếu chưa có -> Thêm vào
+    else {
+      params.append(key, strValue);
+    }
+
+    // Luôn reset về trang 1 khi filter thay đổi
+    if (params.has("page")) {
+      params.set("page", "1");
+    }
+
+    // Đẩy URL mới (scroll: false để không bị nhảy trang)
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  // --- Filter danh sách hiển thị (Client logic) ---
   const categoryOptions = useMemo(() => {
     const list = data.categories ?? [];
     const q = qCategory.trim().toLowerCase();
@@ -113,12 +137,10 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
 
   return (
     <aside className="w-full lg:w-[320px] shrink-0 space-y-6 self-start">
-<<<<<<< HEAD
       
       {/* 1. Categories */}
       {(data.categories?.length ?? 0) > 0 && (
         <Section icon="category" title="Danh mục">
-          {/* Thanh tìm kiếm Category */}
           <div className="relative mb-3">
              <input
               value={qCategory}
@@ -133,40 +155,16 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
               <CheckboxItem
                 key={String(c.value)}
                 label={c.label}
-                checked={(filters.categories ?? []).includes(c.value)}
-                onChange={() => toggleFilter("categories", c.value)}
+                // Check theo URL key "category" (hoặc "category_id" tùy backend bạn)
+                checked={isChecked("category", c.value)} 
+                onChange={() => toggleFilter("category", c.value)}
               />
-=======
-      {/* Discounts
-      {(data.discounts?.length ?? 0) > 0 && (
-        <Section icon="percent" title="Mức giảm giá">
-          <div className="space-y-3">
-            {data.discounts!.map((d) => (
-              <label key={d} className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={filters.discounts.includes(d)}
-                  onChange={() => toggleArray("discounts", d)}
-                  className="w-5 h-5 rounded text-primary"
-                />
-                <span
-                  className={`text-sm ${
-                    filters.discounts.includes(d)
-                      ? "font-bold text-primary"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {d >= 60 ? "Trên 60%" : `Giảm ${d}%`}
-                </span>
-              </label>
->>>>>>> feat/cart-page
             ))}
             {categoryOptions.length === 0 && (
               <p className="text-xs text-gray-500 text-center py-2">Không tìm thấy danh mục</p>
             )}
           </div>
         </Section>
-<<<<<<< HEAD
       )}
 
       {/* 2. Price Ranges */}
@@ -177,8 +175,9 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
               <CheckboxItem
                 key={r.value}
                 label={r.label}
-                checked={filters.priceRanges.includes(r.value)}
-                onChange={() => toggleFilter("priceRanges", r.value)}
+                // Check theo URL key "price_range"
+                checked={isChecked("price_range", r.value)}
+                onChange={() => toggleFilter("price_range", r.value)}
               />
             ))}
           </div>
@@ -193,9 +192,9 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
               <CheckboxItem
                 key={d}
                 label={d >= 60 ? "Trên 60%" : `Giảm ${d}%`}
-                highlight={filters.discounts.includes(d)}
-                checked={filters.discounts.includes(d)}
-                onChange={() => toggleFilter("discounts", d)}
+                highlight={isChecked("discount", d)}
+                checked={isChecked("discount", d)}
+                onChange={() => toggleFilter("discount", d)}
               />
             ))}
           </div>
@@ -203,10 +202,6 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
       )}
 
       {/* 4. Brands */}
-=======
-      )} */}
-      {/* Brands */}
->>>>>>> feat/cart-page
       {(data.brands?.length ?? 0) > 0 && (
         <Section icon="branding_watermark" title="Thương hiệu">
           <div className="relative mb-3">
@@ -223,34 +218,13 @@ export default function Sidebar({ filters, setFilters, data }: SidebarProps) {
               <CheckboxItem
                 key={b.value}
                 label={b.label}
-                checked={(filters.brands ?? []).includes(b.value)}
-                onChange={() => toggleFilter("brands", b.value)}
+                checked={isChecked("brand", b.value)}
+                onChange={() => toggleFilter("brand", b.value)}
               />
             ))}
              {brandOptions.length === 0 && (
               <p className="text-xs text-gray-500 text-center py-2">Không tìm thấy thương hiệu</p>
             )}
-          </div>
-        </Section>
-      )}  
-      {/* Price */}
-      {(data.priceRanges?.length ?? 0) > 0 && (
-        <Section icon="attach_money" title="Khoảng giá">
-          <div className="space-y-3">
-            {data.priceRanges!.map((r) => (
-              <label
-                key={r.value}
-                className="flex items-center gap-3 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={filters.priceRanges.includes(r.value)}
-                  onChange={() => toggleArray("priceRanges", r.value)}
-                  className="w-5 h-5 rounded text-primary"
-                />
-                <span className="text-sm text-gray-700">{r.label}</span>
-              </label>
-            ))}
           </div>
         </Section>
       )}

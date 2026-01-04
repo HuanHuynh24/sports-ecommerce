@@ -2,6 +2,8 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useCartStore } from "@/hooks/useCart";
+import HeaderCart from "./HeaderCart";
 
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -179,17 +181,7 @@ export default function HeaderClient({
         </div>
 
         <div className="flex items-center gap-4 flex-shrink-0">
-          <Link
-            href="/gio-hang"
-            className="flex flex-col items-center gap-1 group relative"
-          >
-            <div className="relative p-2.5 rounded-full bg-gray-50 dark:bg-[#2a1515] group-hover:bg-primary group-hover:text-white transition-all duration-300 text-[#333] dark:text-white shadow-sm">
-              <span className="material-symbols-outlined">shopping_cart</span>
-              <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white dark:border-[#1e0e0e] shadow-sm">
-                3
-              </span>
-            </div>
-          </Link>
+         <HeaderCart />
         </div>
       </div>
 

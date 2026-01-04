@@ -6,7 +6,7 @@ export interface Branch {
 }
 
 export interface Product {
-  id: string;
+  id: number;
   name: string;
   brand: string;
   original_price: number;

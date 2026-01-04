@@ -1,9 +1,8 @@
-import CategoryGrid from "@/components/CategoryGrid";
 import axiosClient from "@/lib/axios-client";
 
 export const pageVotCauLong = {
   // Hàm lấy danh sách trang (pages)
-  getPages: async (searchParams: any) => {
+  getPages:  (searchParams: any) => {
     const params = {
       category_id : 1,
       // page: searchParams.page || 1,
@@ -13,6 +12,8 @@ export const pageVotCauLong = {
       // brand_id: searchParams.brand, // URL: ?brand=1,2
       // mapping thêm các filter khác...
     };
-    return await axiosClient.get("/v1/products", { params });
+    const res =  axiosClient.get("/v1/products", { params });
+    console.log("API Response:", res);
+    return res;
   },
 };
