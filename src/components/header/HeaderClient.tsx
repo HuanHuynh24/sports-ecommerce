@@ -1,27 +1,14 @@
 "use client";
-import Link from "next/link";
+
 import React, { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { useCartStore } from "@/hooks/useCart";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { authService } from "@/services/auth.service";
 import HeaderCart from "./HeaderCart";
+import { cn } from "@/lib/utils";
 
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(
-    new RegExp(
-      "(^| )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]+)"
-    )
-  );
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
-
-/** Active theo path:
- * - exact: true => chỉ active khi pathname === href
- * - exact: false => active khi pathname bắt đầu bằng href (dùng cho /vot-cau-long/xxx)
+/**
+ * Kiểm tra path có active không
  */
 function isActivePath(pathname: string, href: string, exact = false) {
   if (href === "#") return false;
@@ -36,124 +23,169 @@ export default function HeaderClient({
   initialUsername: string | null;
 }) {
   const pathname = usePathname();
-
+  const router = useRouter();
+  
+  //State User
   const [username, setUsername] = useState<string | null>(initialUsername);
+  
+  //State Search
+  const [keyword, setKeyword] = useState("");
 
+  //--- 1. LOGIC AUTHENTICATION ---
   useEffect(() => {
-    // Hàm lấy dữ liệu an toàn
-    const getUserFromStorage = () => {
+    //A. Lấy user từ localStorage (Sync nhanh UI)
+    const getUserFromStorage = (): string | null => {
       try {
+        if (typeof window === "undefined") return null;
         const stored = localStorage.getItem("user_info");
         if (stored) {
           const parsed = JSON.parse(stored);
-          return parsed?.username || parsed?.name || null; 
+          return parsed?.username || parsed?.name || null;
         }
       } catch (e) {
-        console.error("Lỗi parse user info", e);
-        localStorage.removeItem("user_info");
+        return null;
       }
       return null;
     };
 
-    // Hàm update state
-    const refresh = () => {
-      const currentName = getUserFromStorage();
-      // Chỉ update nếu giá trị thực sự thay đổi để tránh re-render thừa
-      setUsername((prev) => (prev !== currentName ? currentName : prev));
+    //B. Gọi API kiểm tra Session thật
+    const verifySession = async () => {
+      try {
+        const user = await authService.getMe();
+        if (user) {
+          const displayName = user.username || user.name || "Khách hàng";
+          setUsername(displayName);
+          
+          const storageData = JSON.stringify({ ...user, username: displayName });
+          if (localStorage.getItem("user_info") !== storageData) {
+             localStorage.setItem("user_info", storageData);
+          }
+        } else {
+           throw new Error("No user returned");
+        }
+      } catch (error) {
+        console.log(error)
+        localStorage.removeItem("user_info");
+        setUsername(null);
+      }
     };
 
-    // 1. GỌI NGAY LẬP TỨC khi component mount để đồng bộ Client & Server
-    refresh();
+    //C. Hàm điều phối đồng bộ
+    const handleSync = (type: 'mount' | 'auth' | 'storage' | 'focus') => {
+      const storageUser = getUserFromStorage();
+      if (storageUser !== username) {
+        setUsername(storageUser);
+      }
+      if (type === 'mount' || type === 'focus') {
+        verifySession();
+      }
+    };
 
-    // 2. Lắng nghe Custom Event (Login/Logout cùng tab)
-    window.addEventListener("auth:changed", refresh);
+    //--- SETUP LISTENERS ---
+    handleSync('mount');
 
-    // 3. Lắng nghe Storage Event (Login/Logout từ TAB KHÁC)
-    // Sự kiện này tự động kích hoạt khi localStorage đổi ở tab khác
-    window.addEventListener("storage", refresh);
+    const onAuthChanged = () => handleSync('auth');
+    const onStorage = () => handleSync('storage');
+    const onFocus = () => handleSync('focus');
 
-    // 4. Fallback khi focus lại tab
-    window.addEventListener("focus", refresh);
+    window.addEventListener("auth:changed", onAuthChanged);
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", onFocus);
 
     return () => {
-      window.removeEventListener("auth:changed", refresh);
-      window.removeEventListener("storage", refresh);
-      window.removeEventListener("focus", refresh);
+      window.removeEventListener("auth:changed", onAuthChanged);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [username]);
 
+  //--- 2. LOGIC SEARCH ---
+  const handleSearch = () => {
+    if (keyword.trim()) {
+      router.push(`/tim-kiem?q=${encodeURIComponent(keyword.trim())}`);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  //--- 3. HELPER ---
   const isLoggedIn = Boolean(username);
 
-  //  class active giống y hệt UI hiện tại của bạn
   const navLinkClass = (href: string) =>
-    cx(
-      "block py-3.5 transition-colors",
+    cn(
+      "block py-3.5 transition-colors border-b-4",
       isActivePath(pathname, href, href === "/")
-        ? "bg-red-900 border-b-4 border-accent"
-        : "hover:bg-red-700 hover:text-yellow-200"
+        ? "bg-red-900 border-yellow-400 text-white"
+        : "border-transparent hover:bg-red-700 hover:text-yellow-200"
     );
 
   return (
     <header className="w-full bg-white dark:bg-[#1e0e0e] shadow-lg shadow-gray-100/50 dark:shadow-none sticky top-0 z-50">
+      
       {/* Top Bar */}
       <div className="w-full bg-white border-b border-gray-100 dark:bg-[#2a1515] dark:border-[#3d2020]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-1.5 flex justify-between items-center text-xs sm:text-sm font-medium">
           <div className="flex items-center gap-6 text-[#555] dark:text-[#ccc]">
-            <span className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer group">
+            <a href="tel:19006868" className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer group">
               <span className="material-symbols-outlined text-[18px] text-primary group-hover:scale-110 transition-transform">
                 phone_in_talk
               </span>
               Hotline: <span className="font-bold">1900 6868</span>
-            </span>
+            </a>
             <span className="hidden sm:inline w-[1px] h-3 bg-gray-300 dark:bg-[#444]"></span>
-            <span className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer group">
+            <Link href="/he-thong-cua-hang" className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer group">
               <span className="material-symbols-outlined text-[18px] text-primary group-hover:scale-110 transition-transform">
                 storefront
               </span>
               Hệ thống 58 cửa hàng
-            </span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-4 text-[#555] dark:text-[#ccc]">
-            <Link className="hover:text-primary transition-colors" href="#">
+            <Link className="hover:text-primary transition-colors hidden sm:block" href="/tra-cuu-don-hang">
               Tra cứu đơn hàng
             </Link>
-            <span className="w-[1px] h-3 bg-gray-300 dark:bg-[#444]"></span>
+            <span className="hidden sm:block w-[1px] h-3 bg-gray-300 dark:bg-[#444]"></span>
 
+            {/* === PHẦN HIỂN THỊ USERNAME === */}
             {isLoggedIn ? (
               <Link
-                className="hover:text-primary transition-colors font-semibold"
+                className="hover:text-primary transition-colors font-semibold flex items-center gap-1.5"
                 href="/account"
-                title="Tài khoản"
+                title="Tài khoản cá nhân"
               >
-                Xin chào, <span className="font-black">{username}</span>
+                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-[16px]">person</span>
+                </div>
+                <span className="truncate max-w-[150px]">
+                  Xin chào, <span className="text-primary font-bold">{username}</span>
+                </span>
               </Link>
             ) : (
               <Link
-                className="hover:text-primary transition-colors"
+                className="hover:text-primary transition-colors flex items-center gap-1.5"
                 href="/dang-nhap"
               >
+                <span className="material-symbols-outlined text-[18px]">login</span>
                 Đăng nhập
               </Link>
             )}
+            {/* === KẾT THÚC === */}
           </div>
         </div>
       </div>
 
       {/* Main Header */}
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-4 flex flex-col md:flex-row items-center gap-4 md:gap-8">
+        {/* LOGO */}
         <Link className="flex items-center gap-2 group flex-shrink-0" href="/">
           <div className="w-12 h-12 text-primary">
-            <svg
-              className="w-full h-full drop-shadow-sm"
-              fill="none"
-              viewBox="0 0 48 48"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
-                fill="currentColor"
-              ></path>
+            <svg className="w-full h-full drop-shadow-sm" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
             </svg>
           </div>
           <div className="flex flex-col">
@@ -166,13 +198,21 @@ export default function HeaderClient({
           </div>
         </Link>
 
+        {/* SEARCH BAR */}
         <div className="flex-1 w-full max-w-[700px]">
           <div className="flex w-full items-stretch rounded-full border-2 border-gray-100 dark:border-[#3d2020] bg-gray-50 dark:bg-[#2a1515] focus-within:border-primary focus-within:bg-white dark:focus-within:bg-black transition-all overflow-hidden h-12 shadow-inner">
             <input
               className="flex-1 bg-transparent border-none focus:ring-0 px-6 text-[#1c0d0d] dark:text-white placeholder:text-gray-400 text-sm font-medium"
-              placeholder="Tìm vợt cầu lông, giày tennis, phụ kiện pickleball..."
+              placeholder="Tìm vợt cầu lông, giày tennis, phụ kiện..."
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={handleKeyDown}
             />
-            <button className="bg-primary text-white px-6 flex items-center justify-center hover:bg-primary-dark transition-colors group">
+            <button 
+              onClick={handleSearch}
+              className="bg-primary text-white px-6 flex items-center justify-center hover:bg-red-700 transition-colors group"
+              aria-label="Tìm kiếm"
+            >
               <span className="material-symbols-outlined group-hover:scale-110 transition-transform">
                 search
               </span>
@@ -180,26 +220,24 @@ export default function HeaderClient({
           </div>
         </div>
 
+        {/* CART */}
         <div className="flex items-center gap-4 flex-shrink-0">
-         <HeaderCart />
+          <HeaderCart />
         </div>
       </div>
 
-      {/* Nav Menu */}
+      {/* Nav Menu (Desktop) */}
       <nav className="w-full bg-primary text-white hidden md:block border-t border-red-800 shadow-md">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
           <ul className="flex items-center justify-between gap-1 text-sm font-bold uppercase tracking-wide">
             <li>
-              <Link className={cx("px-6", navLinkClass("/"))} href="/">
+              <Link className={cn("px-6", navLinkClass("/"))} href="/">
                 Trang chủ
               </Link>
             </li>
 
             <li className="flex-1 text-center">
-              <Link
-                className={navLinkClass("/vot-cau-long")}
-                href="/vot-cau-long"
-              >
+              <Link className={navLinkClass("/vot-cau-long")} href="/vot-cau-long">
                 Vợt Cầu Lông
               </Link>
             </li>
@@ -207,24 +245,6 @@ export default function HeaderClient({
             <li className="flex-1 text-center">
               <Link className={navLinkClass("/giay-the-thao")} href="/giay-the-thao">
                 Giày Thể Thao
-              </Link>
-            </li>
-
-            <li className="flex-1 text-center">
-              <Link
-                className={cx(navLinkClass("/pickleball"), "relative group")}
-                href="/pickleball"
-              >
-                Pickleball
-                <span className="absolute top-1 right-2 text-[8px] bg-yellow-400 text-red-900 px-1 rounded">
-                  HOT
-                </span>
-              </Link>
-            </li>
-
-            <li className="flex-1 text-center">
-              <Link className={navLinkClass("/tennis")} href="/tennis">
-                Tennis
               </Link>
             </li>
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react"; // Thêm useEffect
+import { useState, useMemo, useEffect } from "react"; //Thêm useEffect
 import CategoryGrid from "@/components/CategoryGrid";
 import NewsSection from "@/components/NewsSection";
-import { CATEGORIES_BADMINTON } from "@/data/constants"; // Bỏ import PRODUCTS
+import { CATEGORIES_BADMINTON } from "@/data/constants"; //Bỏ import PRODUCTS
 import Hero from "@/components/Hero";
 import Benefits from "@/components/Benefits";
 import ProductCard from "@/components/ProductCard";
@@ -12,9 +12,9 @@ import { productService } from "@/services/product.service";
 import type { ProductDetail } from "@/types/types";
 const TABS = ["Tất cả", "Vợt cầu lông", "Pickleball", "Tennis"];
 
-// Code phần Banner giữ nguyên...
+//Code phần Banner giữ nguyên...
 const PROMO_BANNERS = [
-  // ... (giữ nguyên như cũ để tiết kiệm chỗ hiển thị) ...
+  //... (giữ nguyên như cũ để tiết kiệm chỗ hiển thị) ...
   { title: "Vợt Cao Cấp", tag: "Sale off 50%", desc: "Đến hết tháng", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAYXLS-jFnYbLatr6PMGRoWa13QUgehkjGyFU_F4n7IdyV-SVJcXrcht2BTqiDTuvUBeiV-TBrJ93weK3_rjQfoDh1vwhH2TLlkLJs6w7nLpE0ffYIHsJo3GXFOES-hdfPjstuXoVYGLHFOxZW23feeJgwdUIsNxe0b03HPlXildGEZE4i6zDKX2foT9JmZY6AHy_b77k6xDDeiGJgFc9EFCu_GqJR--qotOZGjMcgNHNLYTVDqx6l0tuUaJojLIdfXNOgCUIrWsA" },
   { title: "Pickleball", tag: "Giảm giá sốc", desc: "Combo từ 999k", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDBbm8ATHRKspfUH8E4Pe8WSm48X1yvJ5dkHg7IUNPTSZtXV2JjtlsPYyyhMhEgnc85S0ISS4Ki3SNOj104atoacTzxQoAJdh0kExDoA1IVDBSySw4ljcAQWqgTT6efLAgJIXt-y9i0Vb41kxyDbce2UCDR0qu4XQnWmGDBqPIoQjnpHbmGx2Zs5Ih2_OqtCFeEul4JhLt0H_DLuCVmdLKF1M_y216j8oGNSXNlq3_0wiQ9xyY5iOGS016b90QGQWZcnYCld8bgJw" },
   { title: "Giày Chính Hãng", tag: "Limited Time", desc: "Tặng tất cao cấp", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAmYGlg4YS2zUJiAfUrK9XTpMVNS_oB6ZvejTrkxcDmyz_Z33b_sKWC2-vYJfjO3ij7-fWfNFh_F7z3V6l9gXfkDG29UjMQoxWEuwjx2_sEay2rIDB4sKVuWs26J75sPVutnMPdGjruY_NRneAuwpL2wntasJlMXslfQuyDe2HiE7lyeKVHJMUSz1tRGyJ9un90Dk3fwtRRmhqw9CsTya1vPyASxCBhr0dzjNTv4tNlpqYZi1mPUe784HOVjbQv4HMVhvdWK3jXIA" },
@@ -23,33 +23,33 @@ const PROMO_BANNERS = [
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Tất cả");
   
-  // 1. State lưu trữ dữ liệu từ API
+  //1. State lưu trữ dữ liệu từ API
   const [products, setProducts] = useState<ProductDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 2. Gọi API khi component mount
+  //2. Gọi API khi component mount
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true);
-        // Thay đường dẫn này bằng API thực tế của bạn, ví dụ: 'http://localhost:8000/api/products'
-        // const response = await fetch('/api/products'); 
+        //Thay đường dẫn này bằng API thực tế của bạn, ví dụ: 'http://localhost:8000/api/products'
+        //const response = await fetch('/api/products'); 
         
         const res = await productService.getProducts();
-        setProducts(res.data.data); // Cập nhật dữ liệu vào state
+        setProducts(res.data.data); //Cập nhật dữ liệu vào state
       } catch (err) {
         console.error(err);
         setError("Không thể tải danh sách sản phẩm.");
       } finally {
-        setIsLoading(false); // Tắt trạng thái loading dù thành công hay thất bại
+        setIsLoading(false); //Tắt trạng thái loading dù thành công hay thất bại
       }
     };
 
     fetchProducts();
   }, []);
 
-  // 3. Logic lọc sản phẩm (dựa trên state 'products' thay vì biến hằng số)
+  //3. Logic lọc sản phẩm (dựa trên state 'products' thay vì biến hằng số)
   const filteredProducts = useMemo(() => {
     if (activeTab === "Tất cả") return products;
 
@@ -58,7 +58,7 @@ export default function Home() {
         product.category &&
         product.category.toLowerCase().includes(activeTab.toLowerCase())
     );
-  }, [activeTab, products]); // Thêm 'products' vào dependency
+  }, [activeTab, products]); //Thêm 'products' vào dependency
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark">
@@ -81,7 +81,7 @@ export default function Home() {
                   <button
                     key={cat}
                     onClick={() => setActiveTab(cat)}
-                    disabled={isLoading} // Chặn bấm khi đang tải
+                    disabled={isLoading} //Chặn bấm khi đang tải
                     className={`px-8 py-2.5 rounded-full font-bold text-sm transition-all shadow-md ${
                       activeTab === cat
                         ? "bg-primary text-white shadow-red-200 scale-105"
@@ -97,19 +97,19 @@ export default function Home() {
             {/* Product Grid - Xử lý Loading & Error */}
             <div className="min-h-[300px]">
               {isLoading ? (
-                // LOADING UI: Hiển thị Skeleton hoặc Loading Spinner
+                //LOADING UI: Hiển thị Skeleton hoặc Loading Spinner
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="h-[350px] bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
                   ))}
                 </div>
               ) : error ? (
-                // ERROR UI
+                //ERROR UI
                 <div className="text-center text-red-500 py-10">
                   {error}
                 </div>
               ) : (
-                // SUCCESS UI
+                //SUCCESS UI
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {filteredProducts.length > 0 ? (
                     filteredProducts.map((product) => (

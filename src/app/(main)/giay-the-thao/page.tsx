@@ -15,7 +15,7 @@ const sidebarDataStub = {
     { value: 1, label: "Vợt cầu lông" },
     { value: 2, label: "Giày cầu lông" },
   ],
- brands: [
+    brands: [
     { value: 1, label: "Yonex" },
     { value: 2, label: "Victor" },
     { value: 3, label: "Lining" },
@@ -52,7 +52,7 @@ export default async function ProductPage(props: PageProps) {
 
   //4. Tạo Object Query API
   const apiQuery = {
-    category_id: 1,
+    category_id: 2,
     page: Number(getParam("page")) || 1,
     limit: 12,
     sort_by: getParam("sort") || "newest",

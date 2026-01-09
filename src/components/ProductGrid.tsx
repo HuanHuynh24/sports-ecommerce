@@ -9,7 +9,7 @@ interface ProductGridProps {
 }
 
 export default function ProductGrid({ products }: ProductGridProps) {
-  // const { addToCart } = useCart();
+  //const { addToCart } = useCart();
 
   if (products.length === 0) {
     return (

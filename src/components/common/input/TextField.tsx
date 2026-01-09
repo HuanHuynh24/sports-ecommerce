@@ -4,7 +4,7 @@ type FieldProps = {
   type?: React.HTMLInputTypeAttribute;
   name?: string;
   value: string;
-  error?: string; // Thêm prop hiển thị lỗi
+  error?: string; //Thêm prop hiển thị lỗi
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 

@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Category } from "@/types/types";
 
-// --- Types ---
-type Option = { value: string; label: string; subLabel?: string };
+//--- 1. Cập nhật Type: value chấp nhận string hoặc number ---
+type Option = { value: string | number; label: string; subLabel?: string };
 
 type SidebarData = {
   categories?: Array<{ value: Category; label: string }>;
@@ -16,10 +16,9 @@ type SidebarData = {
 
 interface SidebarProps {
   data: SidebarData;
-  // Đã xóa filters và setFilters để tránh lỗi "Functions cannot be passed directly..."
 }
 
-// --- Sub-components (Giữ nguyên giao diện cũ) ---
+//--- Sub-components ---
 function Section({
   icon,
   title,
@@ -49,19 +48,23 @@ function CheckboxItem({
   checked,
   onChange,
   highlight = false,
+  disabled = false,
+  inputType = "checkbox",
 }: {
   label: React.ReactNode;
   checked: boolean;
   onChange: () => void;
   highlight?: boolean;
+  disabled?: boolean;
+  inputType?: "checkbox" | "radio";
 }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer group hover:bg-gray-50 dark:hover:bg-white/5 p-1 rounded transition-colors">
+    <label className={`flex items-center gap-3 cursor-pointer group hover:bg-gray-50 dark:hover:bg-white/5 p-1 rounded transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
       <input
-        type="checkbox"
+        type={inputType}
         checked={checked}
-        onChange={onChange}
-        className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary dark:bg-black/20 dark:border-white/20"
+        onChange={!disabled ? onChange : undefined}
+        className={`w-5 h-5 border-gray-300 text-primary focus:ring-primary dark:bg-black/20 dark:border-white/20 ${inputType === 'radio' ? 'rounded-full' : 'rounded'}`}
       />
       <span
         className={`text-sm select-none ${
@@ -76,59 +79,58 @@ function CheckboxItem({
   );
 }
 
-// --- Main Component ---
+//--- Main Component ---
 export default function Sidebar({ data }: SidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
-  // State local chỉ dùng để filter danh sách hiển thị (Input tìm kiếm)
-  const [qCategory, setQCategory] = useState("");
+  //State local tìm kiếm brand
   const [qBrand, setQBrand] = useState("");
 
-  // --- Logic xử lý URL ---
+  //--- Logic xử lý URL ---
   
-  // 1. Hàm kiểm tra xem 1 giá trị có đang được chọn trên URL không
   const isChecked = (key: string, value: string | number) => {
-    // searchParams.getAll trả về mảng các giá trị (vd: ['yonex', 'lining'])
+    //Chuyển value về string để so sánh với URL params
     return searchParams.getAll(key).includes(String(value));
   };
 
-  // 2. Hàm thay đổi URL khi user click
-  const toggleFilter = (key: string, value: string | number) => {
+  const toggleFilter = (key: string, value: string | number, isSingleSelect: boolean = false) => {
     const params = new URLSearchParams(searchParams.toString());
     const strValue = String(value);
 
-    const currentValues = params.getAll(key);
-
-    // Nếu đã có -> Xóa đi
-    if (currentValues.includes(strValue)) {
-      params.delete(key);
-      // Add lại các giá trị còn lại (trừ giá trị vừa xóa)
-      currentValues
-        .filter((v) => v !== strValue)
-        .forEach((v) => params.append(key, v));
-    } 
-    // Nếu chưa có -> Thêm vào
-    else {
-      params.append(key, strValue);
+    if (isSingleSelect) {
+      //--- SINGLE SELECT (Giá & Thương hiệu) ---
+      const currentValue = params.get(key);
+      if (currentValue === strValue) {
+        params.delete(key); //Bấm lại thì bỏ chọn
+      } else {
+        params.set(key, strValue); //Chọn mới thì ghi đè
+      }
+    } else {
+      //--- MULTI SELECT (Mặc định cho các loại khác nếu cần) ---
+      const currentValues = params.getAll(key);
+      if (currentValues.includes(strValue)) {
+        params.delete(key);
+        currentValues
+          .filter((v) => v !== strValue)
+          .forEach((v) => params.append(key, v));
+      } else {
+        params.append(key, strValue);
+      }
     }
 
-    // Luôn reset về trang 1 khi filter thay đổi
+    //Reset về trang 1
     if (params.has("page")) {
       params.set("page", "1");
     }
 
-    // Đẩy URL mới (scroll: false để không bị nhảy trang)
-    router.push(`?${params.toString()}`, { scroll: false });
+    startTransition(() => {
+      router.push(`?${params.toString()}`, { scroll: false });
+    });
   };
 
-  // --- Filter danh sách hiển thị (Client logic) ---
-  const categoryOptions = useMemo(() => {
-    const list = data.categories ?? [];
-    const q = qCategory.trim().toLowerCase();
-    return q ? list.filter((c) => c.label.toLowerCase().includes(q)) : list;
-  }, [data.categories, qCategory]);
-
+  //--- Filter danh sách Brand (Client logic) ---
   const brandOptions = useMemo(() => {
     const list = data.brands ?? [];
     const q = qBrand.trim().toLowerCase();
@@ -136,38 +138,9 @@ export default function Sidebar({ data }: SidebarProps) {
   }, [data.brands, qBrand]);
 
   return (
-    <aside className="w-full lg:w-[320px] shrink-0 space-y-6 self-start">
+    <aside className="w-full shrink-0 space-y-6 self-start">
       
-      {/* 1. Categories */}
-      {(data.categories?.length ?? 0) > 0 && (
-        <Section icon="category" title="Danh mục">
-          <div className="relative mb-3">
-             <input
-              value={qCategory}
-              onChange={(e) => setQCategory(e.target.value)}
-              placeholder="Tìm danh mục..."
-              className="w-full h-9 px-3 rounded-lg border border-black/10 dark:border-white/10 bg-transparent text-sm outline-none focus:ring-2 focus:ring-primary dark:text-white placeholder:text-gray-400"
-            />
-          </div>
-
-          <div className="space-y-1 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
-            {categoryOptions.map((c) => (
-              <CheckboxItem
-                key={String(c.value)}
-                label={c.label}
-                // Check theo URL key "category" (hoặc "category_id" tùy backend bạn)
-                checked={isChecked("category", c.value)} 
-                onChange={() => toggleFilter("category", c.value)}
-              />
-            ))}
-            {categoryOptions.length === 0 && (
-              <p className="text-xs text-gray-500 text-center py-2">Không tìm thấy danh mục</p>
-            )}
-          </div>
-        </Section>
-      )}
-
-      {/* 2. Price Ranges */}
+      {/* 2. Khoảng giá (SINGLE SELECT) */}
       {(data.priceRanges?.length ?? 0) > 0 && (
         <Section icon="attach_money" title="Khoảng giá">
           <div className="space-y-2">
@@ -175,33 +148,19 @@ export default function Sidebar({ data }: SidebarProps) {
               <CheckboxItem
                 key={r.value}
                 label={r.label}
-                // Check theo URL key "price_range"
+                inputType="radio"
                 checked={isChecked("price_range", r.value)}
-                onChange={() => toggleFilter("price_range", r.value)}
+                onChange={() => toggleFilter("price_range", r.value, true)}
+                disabled={isPending}
               />
             ))}
           </div>
         </Section>
       )}
 
-      {/* 3. Discounts */}
-      {(data.discounts?.length ?? 0) > 0 && (
-        <Section icon="percent" title="Mức giảm giá">
-          <div className="space-y-2">
-            {data.discounts!.map((d) => (
-              <CheckboxItem
-                key={d}
-                label={d >= 60 ? "Trên 60%" : `Giảm ${d}%`}
-                highlight={isChecked("discount", d)}
-                checked={isChecked("discount", d)}
-                onChange={() => toggleFilter("discount", d)}
-              />
-            ))}
-          </div>
-        </Section>
-      )}
+      {/* 3. Mức giảm giá (Giữ nguyên Multi hoặc đổi sang Single tuỳ bạn) */}
 
-      {/* 4. Brands */}
+      {/* 4. Thương hiệu (ĐÃ CẬP NHẬT: SINGLE SELECT) */}
       {(data.brands?.length ?? 0) > 0 && (
         <Section icon="branding_watermark" title="Thương hiệu">
           <div className="relative mb-3">
@@ -218,11 +177,15 @@ export default function Sidebar({ data }: SidebarProps) {
               <CheckboxItem
                 key={b.value}
                 label={b.label}
+                //Dùng inputType="radio" để người dùng hiểu là chỉ chọn 1
+                inputType="radio"
                 checked={isChecked("brand", b.value)}
-                onChange={() => toggleFilter("brand", b.value)}
+                //Truyền true vào tham số thứ 3 để kích hoạt Single Select
+                onChange={() => toggleFilter("brand", b.value, true)}
+                disabled={isPending}
               />
             ))}
-             {brandOptions.length === 0 && (
+            {brandOptions.length === 0 && (
               <p className="text-xs text-gray-500 text-center py-2">Không tìm thấy thương hiệu</p>
             )}
           </div>

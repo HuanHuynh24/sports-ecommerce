@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// --- Imports Services & Utils ---
+//--- Imports Services & Utils ---
 import { authService } from "@/services/auth.service";
 import { loginSuccess } from "@/utils/auth";
 import {
@@ -12,7 +12,7 @@ import {
   calculatePasswordStrength,
 } from "@/utils/validation";
 
-// --- Imports UI Components ---
+//--- Imports UI Components ---
 import HeroPanel from "@/components/page/dang-ky/HeroPanel";
 import TextField from "@/components/common/input/TextField";
 import PasswordField from "@/components/common/input/PasswordField";
@@ -22,18 +22,18 @@ import SocialButtons from "@/components/page/dang-ky/SocialButtons";
  * Sub-Components (Internal)
  * ========================= */
 
-// 1. Divider Component
+//1. Divider Component
 function Divider({ text }: { text: string }) {
   return (
     <div className="relative flex py-2 items-center">
-      <div className="grow border-t border-gray-200 dark:border-gray-700" />
+      <div className="grow border-t border-gray-200 dark:border-gray-700/>
       <span className="shrink-0 mx-4 text-gray-400 text-sm">{text}</span>
-      <div className="grow border-t border-gray-200 dark:border-gray-700" />
+      <div className="grow border-t border-gray-200 dark:border-gray-700/>
     </div>
   );
 }
 
-// 2. Loading/Success Overlay Component
+//2. Loading/Success Overlay Component
 const LoadingRedirect = () => {
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/90 dark:bg-[#1c140d]/95 backdrop-blur-sm transition-all animate-in fade-in duration-300">
@@ -60,9 +60,9 @@ const LoadingRedirect = () => {
 export default function RegisterPage() {
   const router = useRouter();
 
-  // --- States ---
+  //--- States ---
   const [loading, setLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false); // Trạng thái thành công để hiện Overlay
+  const [isSuccess, setIsSuccess] = useState(false); //Trạng thái thành công để hiện Overlay
   const [formData, setFormData] = useState({
     name: "",
     identity: "",
@@ -74,18 +74,18 @@ export default function RegisterPage() {
   const [generalError, setGeneralError] = useState("");
   const [passStrength, setPassStrength] = useState(0);
 
-  // --- Handlers ---
+  //--- Handlers ---
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Xóa lỗi của field đang nhập
+    //Xóa lỗi của field đang nhập
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: "" }));
     }
 
-    // Tính điểm password realtime
+    //Tính điểm password realtime
     if (name === "password") {
       setPassStrength(calculatePasswordStrength(value));
     }
@@ -95,7 +95,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setGeneralError("");
 
-    // 1. Validate Form (Tách biệt logic)
+    //1. Validate Form (Tách biệt logic)
     const { isValid, errors } = validateRegisterForm(formData);
 
     if (!isValid) {
@@ -103,7 +103,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // 2. Gọi API
+    //2. Gọi API
     setLoading(true);
 
     try {
@@ -114,26 +114,26 @@ export default function RegisterPage() {
         password_confirmation: formData.password,
       });
 
-      // 3. Xử lý thành công
-      // Lưu thông tin user vào localStorage & dispatch event cập nhật Header
-      loginSuccess(res.data.user);
+      //3. Xử lý thành công
+      //Lưu thông tin user vào localStorage & dispatch event cập nhật Header
+      loginSuccess(res.data);
 
-      // Bật màn hình Loading Overlay
+      //Bật màn hình Loading Overlay
       setIsSuccess(true);
 
-      // Đợi 1.5s cho user đọc thông báo rồi chuyển trang
+      //Đợi 1.5s cho user đọc thông báo rồi chuyển trang
       setTimeout(() => {
         router.push("/");
       }, 1500);
     } catch (err: any) {
-      // Xử lý lỗi từ API
+      //Xử lý lỗi từ API
       const msg =
         err?.response?.data?.message ||
         "Đăng ký thất bại, vui lòng kiểm tra lại thông tin.";
       setGeneralError(msg);
       console.error("Lỗi đăng ký:", err);
 
-      // Chỉ tắt loading nếu lỗi (nếu thành công thì giữ loading để hiện Overlay)
+      //Chỉ tắt loading nếu lỗi (nếu thành công thì giữ loading để hiện Overlay)
       setLoading(false);
     }
   };
@@ -247,7 +247,7 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            <Divider text="Hoặc đăng ký bằng" />
+            <Divider text="Hoặc đăng ký bằng/>
             <SocialButtons />
 
             <div className="mt-2 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 gap-2">

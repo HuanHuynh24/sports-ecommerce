@@ -5,16 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// --- Services & Utils ---
+//--- Services & Utils ---
 import { authService } from "@/services/auth.service";
-import { loginSuccess } from "@/utils/auth"; // Hàm lưu localStorage bạn đã có
+import { loginSuccess } from "@/utils/auth"; //Hàm lưu localStorage bạn đã có
 
-// --- Icons & Assets ---
+//--- Icons & Assets ---
 import GoogleIcon from "@/assets/icon/GoogleIcon";
 import FacebookIcon from "@/assets/icon/FacebookIcon";
 import login_img from "@/assets/images/login.webp";
 
-// --- Components ---
+//--- Components ---
 import SocialButton from "@/components/SocialButton";
 import TextField from "@/components/common/input/TextField";
 import PasswordField from "@/components/common/input/PasswordField";
@@ -23,7 +23,7 @@ import PasswordField from "@/components/common/input/PasswordField";
  * Sub-Components (UI thuần túy)
  * ========================================= */
 
-// 1. Divider
+//1. Divider
 function Divider({ text }: { text: string }) {
   return (
     <div className="relative py-2">
@@ -39,7 +39,7 @@ function Divider({ text }: { text: string }) {
   );
 }
 
-// 2. Loading Overlay (Tái sử dụng từ trang Register để đồng bộ)
+//2. Loading Overlay (Tái sử dụng từ trang Register để đồng bộ)
 const LoadingRedirect = () => (
   <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/90 dark:bg-[#1c140d]/95 backdrop-blur-sm animate-in fade-in duration-300">
     <div className="relative flex items-center justify-center mb-6">
@@ -57,7 +57,7 @@ const LoadingRedirect = () => (
   </div>
 );
 
-// 3. Hero Panel
+//3. Hero Panel
 function LoginHero() {
   return (
     <section className="hidden lg:flex flex-1 relative bg-gray-900 text-white overflow-hidden group">
@@ -86,20 +86,21 @@ function LoginHero() {
         </h2>
 
         <p className="text-lg text-gray-200/90 font-light max-w-md">
-          Vợt chuẩn - Giày êm - Chiến thắng trong tầm tay. Khám phá bộ sưu tập mới nhất ngay hôm nay.
+          Vợt chuẩn - Giày êm - Chiến thắng trong tầm tay. Khám phá bộ sưu tập
+          mới nhất ngay hôm nay.
         </p>
 
         {/* Social Proof */}
         <div className="flex gap-4 mt-8">
           <div className="flex -space-x-3">
-             {[0, 1, 2].map((i) => (
-                <img
-                  key={i}
-                  alt={`User ${i}`}
-                  className="w-10 h-10 rounded-full border-2 border-white object-cover"
-                  src={`https://ui-avatars.com/api/?background=random&color=fff&name=User${i}`} 
-                />
-             ))}
+            {[0, 1, 2].map((i) => (
+              <img
+                key={i}
+                alt={`User ${i}`}
+                className="w-10 h-10 rounded-full border-2 border-white object-cover"
+                src={`https://ui-avatars.com/api/?background=random&color=fff&name=User${i}`}
+              />
+            ))}
             <div className="w-10 h-10 rounded-full border-2 border-white bg-primary flex items-center justify-center text-xs font-bold text-white">
               +2k
             </div>
@@ -108,10 +109,17 @@ function LoginHero() {
           <div className="flex flex-col justify-center">
             <div className="flex text-yellow-400 text-sm">
               {Array.from({ length: 5 }).map((_, i) => (
-                <span key={i} className="material-symbols-outlined text-[16px] fill-current">star</span>
+                <span
+                  key={i}
+                  className="material-symbols-outlined text-[16px] fill-current"
+                >
+                  star
+                </span>
               ))}
             </div>
-            <span className="text-xs text-gray-300">Được tin dùng bởi cộng đồng vợt thủ</span>
+            <span className="text-xs text-gray-300">
+              Được tin dùng bởi cộng đồng vợt thủ
+            </span>
           </div>
         </div>
       </div>
@@ -126,25 +134,25 @@ function LoginHero() {
 export default function LoginPage() {
   const router = useRouter();
 
-  // --- States ---
+  //--- States ---
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  
+
   const [formData, setFormData] = useState({
-    identity: "", // Email hoặc Phone
+    identity: "", //Email hoặc Phone
     password: "",
   });
 
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [generalError, setGeneralError] = useState("");
 
-  // --- Handlers ---
+  //--- Handlers ---
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Clear lỗi khi user bắt đầu gõ lại
+
+    //Clear lỗi khi user bắt đầu gõ lại
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -153,9 +161,10 @@ export default function LoginPage() {
 
   const validate = () => {
     const errors: { [key: string]: string } = {};
-    if (!formData.identity.trim()) errors.identity = "Vui lòng nhập email hoặc số điện thoại";
+    if (!formData.identity.trim())
+      errors.identity = "Vui lòng nhập email hoặc số điện thoại";
     if (!formData.password) errors.password = "Vui lòng nhập mật khẩu";
-    
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -163,36 +172,48 @@ export default function LoginPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-
     setLoading(true);
-    setGeneralError("");
 
     try {
-      // Gọi API Login
-      const res = await authService.login({
+      //Bước 1: Gọi API Login (để trình duyệt nhận Cookie)
+      const loginRes = await authService.login({
         email: formData.identity,
-        password: formData.password
+        password: formData.password,
       });
 
-      // Xử lý thành công
-      console.log("Đăng nhập thành công:", res.data);
-      loginSuccess(res.data);  
-      setIsSuccess(true);  
+      //Bước 2: Kiểm tra xem loginRes có User Info không
+      const userData = loginRes;
 
-      setTimeout(() => {
-        router.push("/"); 
-      }, 1000);
+      //🔥 QUAN TRỌNG: Nếu Login không trả về User, ta gọi ngay /auth/me để lấy
+      //if (!userData) {
+      //  console.log("Login không trả về user, đang gọi /auth/me...");
+      //  const meRes = await authService.getMe(); //Hàm này dùng axiosClient đã có cookie
+      //  userData = meRes; //Gán data lấy được
+      //}
 
+      //Bước 3: Lưu User Info vào LocalStorage để UI hiển thị
+      if (userData) {
+        //Tái sử dụng logic lưu và dispatch event
+        //Bạn có thể import loginSuccess hoặc viết thẳng vào đây
+        localStorage.setItem("user_info", JSON.stringify(userData.data));
+        window.dispatchEvent(new Event("auth:changed"));
+
+        setIsSuccess(true);
+        setTimeout(() => router.push("/"), 1000);
+      } else {
+        throw new Error("Không lấy được thông tin người dùng");
+      }
     } catch (err: any) {
-      console.error("Lỗi đăng nhập:", err);
-      const msg = err?.response?.data?.message || "Tài khoản hoặc mật khẩu không chính xác.";
-      setGeneralError(msg);
+      console.error("Lỗi:", err);
+      setGeneralError(err?.response?.data?.message || "Đăng nhập thất bại");
+    } finally {
       setLoading(false);
     }
   };
 
   const onGoogle = () => console.log("Login with Google (Pending integration)");
-  const onFacebook = () => console.log("Login with Facebook (Pending integration)");
+  const onFacebook = () =>
+    console.log("Login with Facebook (Pending integration)");
 
   return (
     <main className="relative flex min-h-dvh w-full overflow-hidden">
@@ -204,7 +225,9 @@ export default function LoginPage() {
         href="/"
         className="fixed top-4 right-4 z-50 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-gray-800 shadow-md ring-1 ring-black/5 backdrop-blur hover:bg-white transition dark:bg-[#2a1515]/90 dark:text-gray-100 dark:ring-white/10"
       >
-        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        <span className="material-symbols-outlined text-[18px]">
+          arrow_back
+        </span>
         Về trang chủ
       </Link>
 
@@ -214,7 +237,6 @@ export default function LoginPage() {
       <section className="flex-1 bg-white dark:bg-background-dark overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-6 sm:p-10 lg:p-16">
           <div className="w-full max-w-md space-y-6">
-            
             <div className="text-center lg:text-left">
               <h2 className="text-3xl font-bold tracking-tight text-text-main dark:text-white">
                 Đăng nhập
@@ -227,7 +249,9 @@ export default function LoginPage() {
             {/* Error Banner */}
             {generalError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-600 text-sm animate-in fade-in slide-in-from-top-2">
-                <span className="material-symbols-outlined text-[20px]">error</span>
+                <span className="material-symbols-outlined text-[20px]">
+                  error
+                </span>
                 <span>{generalError}</span>
               </div>
             )}
@@ -278,10 +302,10 @@ export default function LoginPage() {
                 disabled={loading}
               >
                 {loading ? (
-                   <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
-                      Đang xử lý...
-                   </span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                    Đang xử lý...
+                  </span>
                 ) : (
                   <>
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">

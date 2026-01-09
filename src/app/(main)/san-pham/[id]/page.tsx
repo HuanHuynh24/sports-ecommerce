@@ -7,27 +7,28 @@ interface PageProps {
   params: { id: string };
 }
 
-// 1. Generate Metadata cho SEO (Optional nhưng nên có)
-// export async function generateMetadata({ params }: PageProps) {
-//   const product = await productService.getDetail(params.id);
-//   if (!product) return { title: "Sản phẩm không tồn tại" };
+//1. Generate Metadata cho SEO (Optional nhưng nên có)
+//export async function generateMetadata({ params }: PageProps) {
+//  const product = await productService.getDetail(params.id);
+//  if (!product) return { title: "Sản phẩm không tồn tại" };
   
-//   return {
-//     title: `${product.name} | WebTop Cầu Lông`,
-//     description: product.description.substring(0, 160),
-//     openGraph: {
-//       images: [product.thumbnail],
-//     },
-//   };
-// }
+//  return {
+//    title: `${product.name} | WebTop Cầu Lông`,
+//    description: product.description.substring(0, 160),
+//    openGraph: {
+//      images: [product.thumbnail],
+//    },
+//  };
+//}
 
-// 2. Main Page Component
+//2. Main Page Component
 export default async function ProductDetailPage({ params }: PageProps) {
-  // Fetch dữ liệu trên Server
-  const product = await productService.getDetail(params.id);
+  //Fetch dữ liệu trên Server
+  const { id } = await params;
+  const product = await productService.getDetail(id);
 
   console.log("Product Detail:", product);
-  // Nếu không có sản phẩm -> trang 404
+  //Nếu không có sản phẩm -> trang 404
   if (!product) {
     notFound();
   }

@@ -8,8 +8,8 @@ type PasswordFieldProps = {
   name?: string;
   value: string;
   error?: string;
-  strength?: number; // Nhận điểm sức mạnh (0-4)
-  showStrengthBar?: boolean; // Có hiển thị thanh sức mạnh không
+  strength?: number; //Nhận điểm sức mạnh (0-4)
+  showStrengthBar?: boolean; //Có hiển thị thanh sức mạnh không
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
@@ -25,7 +25,7 @@ export default function PasswordField({
 }: PasswordFieldProps) {
   const [show, setShow] = useState(false);
 
-  // Helper chọn màu dựa trên strength
+  //Helper chọn màu dựa trên strength
   const getBarColor = (index: number) => {
     if (strength > index) {
       if (strength <= 2) return "bg-red-500";

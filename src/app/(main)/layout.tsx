@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import HeaderServer from "@/components/header/HeaderServer";
 import Footer from "@/components/Footer";
 import NextTopLoader from "nextjs-toploader";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -45,7 +46,7 @@ export default function RootLayout({
         />
         <HeaderServer />
         {children}
-
+        <Toaster position="top-center" />
         <Footer />
       </body>
     </html>

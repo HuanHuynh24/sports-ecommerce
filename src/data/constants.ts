@@ -76,8 +76,8 @@ export const PRODUCTS: Product[] = [
     id: "p2",
     brand: "Lining",
     name: "Giày Cầu Lông Lining AYAT003-2 Chuyên Nghiệp",
-    // bạn đang để currentPrice 2.9m, originalPrice 1.85m -> ngược
-    // mình chuẩn hoá: originalPrice = 2.9m, currentPrice = 1.85m
+    //bạn đang để currentPrice 2.9m, originalPrice 1.85m -> ngược
+    //mình chuẩn hoá: originalPrice = 2.9m, currentPrice = 1.85m
     currentPrice: 1850000,
     originalPrice: 2900000,
     image:
@@ -89,7 +89,7 @@ export const PRODUCTS: Product[] = [
     id: "p3",
     brand: "Vina Star",
     name: "Ống Cầu Lông Vina Star (12 Quả) - Tiêu Chuẩn Thi Đấu",
-    // bạn đang để currentPrice 2.9m, originalPrice 180k -> ngược
+    //bạn đang để currentPrice 2.9m, originalPrice 180k -> ngược
     currentPrice: 180000,
     originalPrice: 290000,
     image:
@@ -177,7 +177,7 @@ export const initialItems: CartItem[] = [
     name: "Yonex Astrox 88D Pro",
     category: "Rackets",
     tag: "Hot",
-    spec: "Spec: 4U / G5",
+    spec: "Spec: 4U /G5",
     price: 2500000,
     originalPrice: 2800000,
     qty: 1,

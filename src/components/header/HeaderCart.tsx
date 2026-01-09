@@ -1,4 +1,4 @@
-// components/header/HeaderCart.tsx
+//components/header/HeaderCart.tsx
 "use client";
 
 import Link from "next/link";
@@ -7,9 +7,9 @@ import { useEffect } from "react";
 
 export default function HeaderCart() {
   const cartCount = useCartStore((state) => state.cartCount);
-  const fetchCartCount = useCartStore((state) => state.fetchCartCount);
+  const fetchCartCount = useCartStore((state) => state.fetchCart);
 
-  // Gọi API lấy số lượng khi component này được mount
+  //Gọi API lấy số lượng khi component này được mount
   useEffect(() => {
     fetchCartCount();
   }, [fetchCartCount]);

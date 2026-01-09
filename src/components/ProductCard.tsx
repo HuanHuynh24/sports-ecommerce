@@ -18,19 +18,19 @@ const formatCurrency = (amount: number) =>
 const clamp = (n: number) => Math.max(0, Math.min(99, Math.round(n)));
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onView }) => {
-  // --- TỐI ƯU HÓA STORE ---
-  // 1. Lấy hàm addToCart
+  //--- TỐI ƯU HÓA STORE ---
+  //1. Lấy hàm addToCart
   const addToCart = useCartStore((state) => state.addToCart);
   
-  // 2. Chỉ lấy trạng thái loading của CHÍNH SẢN PHẨM NÀY
-  // !! ép kiểu về boolean (nếu undefined sẽ là false)
+  //2. Chỉ lấy trạng thái loading của CHÍNH SẢN PHẨM NÀY
+  //!! ép kiểu về boolean (nếu undefined sẽ là false)
   const isAdding = useCartStore((state) => !!state.loadingItems[product.id]);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault(); 
     e.stopPropagation(); 
     
-    // Nếu đang thêm chính sản phẩm này thì chặn lại
+    //Nếu đang thêm chính sản phẩm này thì chặn lại
     if (isAdding) return; 
 
     await addToCart(product);
@@ -42,11 +42,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onView }) => {
     onView?.(product);
   };
 
-  // --- LOGIC GIAO DIỆN (Giữ nguyên) ---
+  //--- LOGIC GIAO DIỆN (Giữ nguyên) ---
   const discount = useMemo(() => {
     if (typeof product.discount === "number") return clamp(product.discount);
     if (product.original_price > 0 && product.price < product.original_price) {
-      return clamp(((product.original_price - product.price) / product.original_price) * 100);
+      return clamp(((product.original_price - product.price) /product.original_price) * 100);
     }
     return undefined;
   }, [product.discount, product.original_price, product.price]);
