@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 //--- Services & Utils ---
 import { authService } from "@/services/auth.service";
 import { loginSuccess } from "@/utils/auth"; //Hàm lưu localStorage bạn đã có
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088/api/v1";
 
 //--- Icons & Assets ---
 import GoogleIcon from "@/assets/icon/GoogleIcon";
@@ -211,9 +213,11 @@ export default function LoginPage() {
     }
   };
 
-  const onGoogle = () => console.log("Login with Google (Pending integration)");
+  const onGoogle = () =>
+    (window.location.href = `${API_URL}/auth/google/redirect`);
   const onFacebook = () =>
     console.log("Login with Facebook (Pending integration)");
+  // window.location.href = `${API_URL}/auth/facebook/redirect`;
 
   return (
     <main className="relative flex min-h-dvh w-full overflow-hidden">
