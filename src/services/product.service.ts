@@ -12,7 +12,7 @@ export const productService = {
   //GET  /products/{id}
   getDetail:  (id: number | string) => {
     return axiosClient
-      .get<ApiResponse<ProductDetail>>(` /products/${id}`)
+      .get<ApiResponse<ProductDetail>>(`/products/${id}`)
       .then((res) => res.data);
   },
 };

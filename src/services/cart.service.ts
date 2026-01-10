@@ -14,7 +14,7 @@ export const cartService = {
 
   //3. Cập nhật số lượng (PUT) - Endpoint: /items/{item_id}
   updateQuantity: (itemId: number, quantity: number) => {
-    return axiosClient.put(` /cart/items/${itemId}`, { quantity });
+    return axiosClient.put(`/cart/items/${itemId}`, { quantity });
   },
 
   //4. Chọn/Bỏ chọn sản phẩm (PUT) - Endpoint: /select
@@ -28,7 +28,7 @@ export const cartService = {
 
   //5. Xóa 1 sản phẩm (DELETE) - Endpoint: /items/{item_id}
   removeItem: (itemId: number) => {
-    return axiosClient.delete(` /cart/items/${itemId}`);
+    return axiosClient.delete(`/cart/items/${itemId}`);
   },
 
   //6. Xóa tất cả/Làm trống giỏ (DELETE) - Endpoint: /clear
