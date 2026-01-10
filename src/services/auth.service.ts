@@ -8,14 +8,14 @@ interface RegisterPayload {
   name: string;
 }
 export interface UserProfile {
-  id: number | string;
+  id: number;
   name: string;
-  username?: string;
   email: string;
-  phone?: string;
-  avatar?: string;
-  role?: string;
-  //...các trường khác
+  phone: string | null;
+  role: string;
+  status: string;
+  avatar_url: string | null;
+  created_at: string;
 }
 interface LoginPayload {
   email: string;
@@ -76,5 +76,13 @@ export const authService = {
       //console.warn("Không lấy được thông tin user:", error);
       return null;
     }
+  },
+
+  updateProfile: (formData: FormData) => {
+    return axiosClient.post("/auth/me", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   },
 };

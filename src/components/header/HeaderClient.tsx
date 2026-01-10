@@ -155,7 +155,7 @@ export default function HeaderClient({
             {isLoggedIn ? (
               <Link
                 className="hover:text-primary transition-colors font-semibold flex items-center gap-1.5"
-                href="/account"
+                href="/tai-khoan"
                 title="Tài khoản cá nhân"
               >
                 <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-primary">
