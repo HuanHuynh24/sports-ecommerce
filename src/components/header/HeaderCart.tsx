@@ -1,18 +1,25 @@
-//components/header/HeaderCart.tsx
+// components/header/HeaderCart.tsx
 "use client";
 
 import Link from "next/link";
 import { useCartStore } from "@/hooks/useCart";
 import { useEffect } from "react";
 
-export default function HeaderCart() {
+// 1. Định nghĩa Props để nhận tín hiệu từ HeaderClient
+interface HeaderCartProps {
+  enableFetch?: boolean;
+}
+
+export default function HeaderCart({ enableFetch = false }: HeaderCartProps) {
   const cartCount = useCartStore((state) => state.cartCount);
   const fetchCartCount = useCartStore((state) => state.fetchCart);
 
-  //Gọi API lấy số lượng khi component này được mount
+  // 2. Logic quan trọng: Chỉ gọi API khi enableFetch = true (tức là Auth đã verify xong)
   useEffect(() => {
-    fetchCartCount();
-  }, [fetchCartCount]);
+    if (enableFetch) {
+      fetchCartCount();
+    }
+  }, [fetchCartCount, enableFetch]);
 
   return (
     <Link

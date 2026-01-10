@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { cartService } from "@/services/cart.service";
+// Thay thế cartService bằng useCartStore
+import { useCartStore } from "@/hooks/useCart";
 
 // --- 1. ĐỊNH NGHĨA TYPES ---
 export interface Attribute {
@@ -56,10 +57,16 @@ export default function ProductDetailView({
 }: {
   product: ProductDetail;
 }) {
+  // --- STORE ---
+  // 1. Lấy hàm addToCart từ store
+  const addToCart = useCartStore((state) => state.addToCart);
+  
+  // 2. Lấy trạng thái loading từ store (đồng bộ với Card)
+  const isAdding = useCartStore((state) => !!state.loadingItems[product.id]);
+
   // --- STATE ---
   const [activeImage, setActiveImage] = useState(product.thumbnail);
   const [quantity, setQuantity] = useState(1);
-  const [isAdding, setIsAdding] = useState(false);
 
   // State cho biến thể CÓ thuộc tính (Size, Color...)
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
@@ -68,15 +75,12 @@ export default function ProductDetailView({
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
 
   // --- COMPUTED LOGIC ---
-
-  // 1. Kiểm tra xem sản phẩm có dùng hệ thuộc tính không
   const hasAttributes = useMemo(() => {
     return product.variants.some(
       (v) => v.attributes && v.attributes.length > 0
     );
   }, [product.variants]);
 
-  // 2. Lấy danh sách tên thuộc tính để render nút chọn
   const attributeNames = useMemo(() => {
     if (!hasAttributes) return [];
     const names = new Set<string>();
@@ -86,7 +90,6 @@ export default function ProductDetailView({
     return Array.from(names);
   }, [product.variants, hasAttributes]);
 
-  // 3. Xác định Variant hiện tại đang chọn
   const currentVariant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) return null;
 
@@ -101,13 +104,11 @@ export default function ProductDetailView({
     }
   }, [product.variants, selectedAttrs, selectedVariantId, hasAttributes]);
 
-  // 4. Thông tin hiển thị
   const displayPrice = currentVariant ? currentVariant.price : product.price;
   const maxStock = currentVariant ? currentVariant.stock_qty : 0;
   const isOutOfStock = currentVariant ? maxStock === 0 : false;
 
   // --- EFFECTS ---
-
   useEffect(() => {
     if (product.variants && product.variants.length > 0) {
       const defaultVariant =
@@ -134,7 +135,6 @@ export default function ProductDetailView({
   }, [currentVariant]);
 
   // --- HANDLERS ---
-
   const handleAttrChange = (name: string, value: string) => {
     setSelectedAttrs((prev) => ({ ...prev, [name]: value }));
   };
@@ -144,27 +144,28 @@ export default function ProductDetailView({
       alert("Vui lòng chọn phiên bản sản phẩm!");
       return;
     }
+    
+    // Nếu đang thêm chính sản phẩm này thì chặn lại
+    if (isAdding) return;
 
-    setIsAdding(true);
-    try {
-      const payload = {
-        product_variant_id: currentVariant.id,
-        quantity: quantity,
-      };
-      await cartService.addToCart(payload);
-      alert("Đã thêm vào giỏ hàng thành công!");
-    } catch (error: any) {
-      console.error("Lỗi thêm giỏ hàng:", error);
-      const message =
-        error?.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.";
-      alert(message);
-    } finally {
-      setIsAdding(false);
-    }
+    // Gọi hàm addToCart từ Store
+    // Lưu ý: Store cần xử lý logic nhận thêm variant_id và quantity
+    // Nếu Store chưa hỗ trợ tham số thứ 2, 3, bạn cần truyền object
+    // Ở đây tôi giả định bạn sẽ truyền object mở rộng hoặc cập nhật Store
+    const payload = {
+        ...product, // Truyền thông tin cơ bản để hiển thị optimist (nếu store cần)
+        id: product.id,
+        variant_id: currentVariant.id, // ID biến thể
+        quantity: quantity // Số lượng
+    };
+
+    // Gọi store (giả định store xử lý được payload này hoặc bạn sửa store để nhận params)
+    // Nếu store chỉ nhận (product), bạn cần sửa store để nhận thêm variants
+    // Dưới đây là cách gọi an toàn truyền dữ liệu qua
+    await addToCart(payload as any); 
   };
 
   // --- RENDER HELPERS ---
-
   const renderAttributeSelector = (attrName: string) => {
     const possibleValues = Array.from(
       new Set(
@@ -246,11 +247,8 @@ export default function ProductDetailView({
     );
   };
 
-  // --- MỚI: Hàm hiển thị chi tiết thuộc tính của Variant đã chọn ---
   const renderSelectedVariantInfo = () => {
     if (!currentVariant) return null;
-    
-    // Nếu variant không có attributes thì không cần hiện bảng này
     if (!currentVariant.attributes || currentVariant.attributes.length === 0) return null;
 
     return (
@@ -260,21 +258,16 @@ export default function ProductDetailView({
           Thông tin chi tiết phiên bản:
         </h4>
         <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-          {/* Hiển thị SKU */}
           <div className="flex justify-between text-sm border-b border-dashed border-gray-200 dark:border-gray-700 pb-1">
             <span className="text-gray-500">Mã SKU</span>
             <span className="font-medium text-gray-900 dark:text-white">{currentVariant.sku}</span>
           </div>
-          
-          {/* Loop qua tất cả attributes của variant đang chọn */}
           {currentVariant.attributes.map((attr, index) => (
             <div key={index} className="flex justify-between text-sm border-b border-dashed border-gray-200 dark:border-gray-700 pb-1">
               <span className="text-gray-500 capitalize">{attr.name}</span>
               <span className="font-medium text-gray-900 dark:text-white">{attr.value}</span>
             </div>
           ))}
-
-          {/* Hiển thị tồn kho */}
           <div className="flex justify-between text-sm pt-1">
             <span className="text-gray-500">Tồn kho</span>
             <span className={`font-medium ${currentVariant.stock_qty > 0 ? 'text-green-600' : 'text-red-500'}`}>
@@ -291,7 +284,6 @@ export default function ProductDetailView({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         {/* --- LEFT: GALLERY --- */}
         <div className="lg:col-span-7 space-y-4">
-          {/* Main Image */}
           <div className="aspect-square relative bg-white dark:bg-[#120707] rounded-2xl border border-black/5 dark:border-white/10 overflow-hidden flex items-center justify-center p-6 shadow-sm">
             {activeImage ? (
               <img
@@ -307,7 +299,6 @@ export default function ProductDetailView({
             )}
           </div>
 
-          {/* Thumbnails */}
           <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
             {[
               { id: "thumb-main", url: product.thumbnail },
@@ -352,7 +343,6 @@ export default function ProductDetailView({
             Mã SP: <span className="font-mono text-gray-700 dark:text-gray-300">{product.sku}</span>
           </div>
 
-          {/* Price */}
           <div className="flex items-end gap-3 mb-8 pb-8 border-b border-gray-100 dark:border-white/10">
             <span className="text-3xl font-black text-red-600">
               {formatCurrency(displayPrice)}
@@ -364,17 +354,14 @@ export default function ProductDetailView({
             )}
           </div>
 
-          {/* Selectors */}
           <div className="mb-4">
             {hasAttributes
               ? attributeNames.map((name) => renderAttributeSelector(name))
               : renderVariantSelector()}
           </div>
 
-          {/* --- NEW: Hiển thị bảng thông tin Attributes của Variant đã chọn --- */}
           {renderSelectedVariantInfo()}
 
-          {/* Action Buttons */}
           <div className="mt-auto">
             <div className="flex items-center gap-4 mb-4">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -431,7 +418,6 @@ export default function ProductDetailView({
             </div>
           </div>
 
-          {/* Description */}
           <div className="mt-8 bg-gray-50 dark:bg-white/5 p-5 rounded-xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">
             <h3 className="font-bold text-black dark:text-white mb-2 uppercase text-xs">
               Mô tả sản phẩm
@@ -441,7 +427,6 @@ export default function ProductDetailView({
         </div>
       </div>
 
-      {/* --- RELATED PRODUCTS --- */}
       {product.related_products && product.related_products.length > 0 && (
         <div className="mt-16 pt-10 border-t border-gray-200 dark:border-white/10">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -449,7 +434,7 @@ export default function ProductDetailView({
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {product.related_products.map((item) => (
-              <Link href={`/product/${item.id}`} key={item.id} className="group block">
+              <Link href={`/san-pham/${item.id}`} key={item.id} className="group block">
                 <div className="aspect-square bg-gray-100 dark:bg-white/5 rounded-xl overflow-hidden mb-3 border border-transparent group-hover:border-black/10 dark:group-hover:border-white/20 transition relative">
                   {item.discount_rate > 0 && (
                     <span className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">

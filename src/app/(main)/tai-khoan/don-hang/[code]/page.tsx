@@ -77,6 +77,8 @@ export default function OrderDetailPage() {
     setCancelling(false);
   };
 
+
+  console.log("log", order)
   // --- Render Loading ---
   if (loading) {
     return (
@@ -144,7 +146,7 @@ export default function OrderDetailPage() {
                       {/* Ảnh sản phẩm */}
                       <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
                         <img
-                          src={item.image || "https://placehold.co/150"}
+                          src={item.image_url || "https://placehold.co/150"}
                           alt={item.product_name}
                           className="w-full h-full object-cover"
                         />

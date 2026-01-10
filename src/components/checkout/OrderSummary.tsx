@@ -13,6 +13,7 @@ interface Props {
 }
 
 export default function OrderSummary({ items, subtotal, shippingCost, total, onComplete, isSubmitting }: Props) {
+  console.log("item", items)
   return (
     <div className="lg:sticky lg:top-24 flex flex-col gap-6">
       <div className="bg-white dark:bg-[#121212] rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
@@ -23,10 +24,9 @@ export default function OrderSummary({ items, subtotal, shippingCost, total, onC
           {items.map((item) => (
             <div key={item.id} className="flex gap-4 items-start group">
               <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
-                <Image 
-                  src={item.image || "https://placehold.co/100"} 
+                <img
+                  src={item.image_url || "https://placehold.co/100"} 
                   alt={item.name} 
-                  fill 
                   className="object-cover" 
                 />
                 <span className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-bl-md">

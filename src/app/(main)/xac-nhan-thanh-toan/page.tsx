@@ -7,12 +7,13 @@ import { ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 //Utils
-import { isValidEmail, isValidPhone } from "@/lib/utils"; //Import hàm validate mới
+import { isValidEmail, isValidPhone } from "@/lib/utils";
 
 //Types & Services
 import { CheckoutFormData, PaymentType } from "@/types/checkout";
 import { useCartStore } from "@/hooks/useCart";
 import { orderService } from "@/services/order.service";
+import { authService } from "@/services/auth.service"; // 1. Import authService
 
 //Components
 import CheckoutHeader from "@/components/checkout/CheckoutHeader";
@@ -43,9 +44,36 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentType>("cod");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // --- LẤY DỮ LIỆU GIỎ HÀNG ---
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
+
+  // --- 2. LẤY THÔNG TIN USER ĐỂ AUTO-FILL ---
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const user = await authService.getMe();
+        
+        if (user) {
+          // Cập nhật state formData với thông tin từ user
+          setFormData((prev) => ({
+            ...prev,
+            email: user.email || "",
+            // Map từ user.name sang fullName
+            fullName: user.name || "",
+            // Xử lý trường hợp phone null
+            phone: user.phone || "", 
+          }));
+        }
+      } catch (error) {
+        // Nếu lỗi (vd: chưa đăng nhập) thì lờ đi, để user tự nhập
+        console.log("User not logged in or fetch error", error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []); // Chạy 1 lần khi mount
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -58,10 +86,8 @@ export default function CheckoutPage() {
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
 
-  //--- LOGIC QUAN TRỌNG: VALIDATE VÀ GỌI API ---
-  //--- LOGIC QUAN TRỌNG: VALIDATE VÀ GỌI API ---
+  //--- LOGIC VALIDATE VÀ GỌI API (GIỮ NGUYÊN) ---
   const handleCompletePurchase = async () => {
-    // 1. Validate (Giữ nguyên như cũ)
     if (selectedItems.length === 0) {
       toast.error("Vui lòng chọn sản phẩm để thanh toán.");
       return;
@@ -92,43 +118,31 @@ export default function CheckoutPage() {
     try {
       const fullAddress = `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`;
 
-      // Payload tạo đơn hàng cơ bản
       const payload = {
         receiver_name: formData.fullName,
         receiver_phone: formData.phone,
         shipping_address: fullAddress,
-        payment_method: paymentMethod, // 'cod', 'vnpay', 'momo', 'card'
+        payment_method: paymentMethod,
         note: formData.note || "",
       };
 
-      // BƯỚC 1: Tạo đơn hàng trên hệ thống trước
       const res = await orderService.createOrder(payload);
 
       if (res.status) {
-        // Refresh giỏ hàng ngay lập tức để tránh user bấm mua tiếp
         await fetchCart();
+        const orderCode = res.data?.code;
 
-        const orderCode = res.data?.code; // VD: ORD-20231025-1234
-
-        // --- XỬ LÝ RIÊNG CHO VNPAY ---
         if (paymentMethod === "vnpay") {
           toast.loading("Đang chuyển hướng sang VNPAY...", { id: toastId });
-
           try {
-            // BƯỚC 2: Gọi API lấy link thanh toán
             const vnpayRes = await orderService.createVnpayUrl(orderCode);
-
             if (vnpayRes.status && vnpayRes.data?.url) {
-              // BƯỚC 3: Chuyển hướng sang trang thanh toán của VNPAY
-              // Lưu ý: Dùng window.location.href cho external link
               window.location.href = vnpayRes.data.url;
             } else {
-              // Trường hợp API VNPAY lỗi
               toast.error(
-                "Không thể tạo cổng thanh toán. Vui lòng thử lại trong Lịch sử đơn hàng.",
+                "Lỗi tạo cổng thanh toán. Vui lòng thử lại sau.",
                 { id: toastId }
               );
-              // Vẫn chuyển về trang success nhưng coi như chưa thanh toán
               router.push(
                 `/order-success?code=${orderCode}&payment_failed=true`
               );
@@ -139,20 +153,17 @@ export default function CheckoutPage() {
             router.push(`/order-success?code=${orderCode}&payment_failed=true`);
           }
         }
-        // --- XỬ LÝ CÁC PHƯƠNG THỨC KHÁC (COD, CARD) ---
         else {
           toast.success("Đặt hàng thành công!", { id: toastId });
           router.push(`/order-success?code=${orderCode}`);
         }
       } else {
-        // Lỗi từ Logic BE khi tạo đơn (VD: Hết hàng)
         toast.error(res.message || "Đặt hàng thất bại.", { id: toastId });
       }
     } catch (error) {
       console.error("Checkout Error:", error);
       toast.error("Lỗi hệ thống.", { id: toastId });
     } finally {
-      // Chỉ tắt loading nếu KHÔNG PHẢI là vnpay (vì vnpay cần loading cho đến khi redirect)
       if (paymentMethod !== "vnpay") {
         setIsSubmitting(false);
       }
@@ -164,7 +175,7 @@ export default function CheckoutPage() {
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-  const shippingCost = 30000; //Fix cứng theo BE
+  const shippingCost = 30000;
   const total = subtotal + shippingCost;
 
   if (cartCount === 0 && !isSubmitting) {
@@ -198,23 +209,15 @@ export default function CheckoutPage() {
               <span className="font-bold">Thanh toán</span>
             </nav>
 
+            {/* Component này sẽ hiển thị dữ liệu đã được fill từ state formData */}
             <ContactInfo data={formData} onChange={handleInputChange} />
             <ShippingAddress data={formData} onChange={handleInputChange} />
 
             {/* Thông báo Shipping */}
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 flex items-center gap-3">
               <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-full text-blue-600 dark:text-blue-200">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                {/* SVG Icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10 17h4V5H2v12h3m10 0h4v-3.343c0-.53-.211-1.039-.586-1.414l-2.828-2.828a2 2 0 0 0-1.414-.586h-2.172v5h3" />
                   <circle cx="7.5" cy="17.5" r="2.5" />
                   <circle cx="17.5" cy="17.5" r="2.5" />
@@ -246,6 +249,7 @@ export default function CheckoutPage() {
                 className="w-full p-3 border rounded-lg bg-white dark:bg-white/5 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-red-600 outline-none"
                 placeholder="Lời nhắn cho người bán hoặc shipper..."
                 onChange={handleInputChange}
+                value={formData.note} // Đảm bảo binding value
               />
             </div>
           </div>
@@ -258,8 +262,8 @@ export default function CheckoutPage() {
               shippingCost={shippingCost}
               total={total}
               onComplete={handleCompletePurchase}
-              tax={0} //Tạm thời bỏ qua tax nếu BE không yêu cầu tính riêng
-              isSubmitting={isSubmitting} //Disable nút khi đang submit
+              tax={0}
+              isSubmitting={isSubmitting}
             />
           </div>
         </div>

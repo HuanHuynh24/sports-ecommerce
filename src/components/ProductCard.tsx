@@ -3,7 +3,6 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { Product } from "@/types/types";
-import { useCartStore } from "@/hooks/useCart"; 
 
 interface ProductCardProps {
   product: Product;
@@ -18,41 +17,23 @@ const formatCurrency = (amount: number) =>
 const clamp = (n: number) => Math.max(0, Math.min(99, Math.round(n)));
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onView }) => {
-  //--- TỐI ƯU HÓA STORE ---
-  //1. Lấy hàm addToCart
-  const addToCart = useCartStore((state) => state.addToCart);
-  
-  //2. Chỉ lấy trạng thái loading của CHÍNH SẢN PHẨM NÀY
-  //!! ép kiểu về boolean (nếu undefined sẽ là false)
-  const isAdding = useCartStore((state) => !!state.loadingItems[product.id]);
-
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault(); 
-    e.stopPropagation(); 
-    
-    //Nếu đang thêm chính sản phẩm này thì chặn lại
-    if (isAdding) return; 
-
-    await addToCart(product);
-  };
-
-  const handleQuickView = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onView?.(product);
-  };
-
-  //--- LOGIC GIAO DIỆN (Giữ nguyên) ---
+  // Logic tính toán Discount (Giữ nguyên)
   const discount = useMemo(() => {
     if (typeof product.discount === "number") return clamp(product.discount);
     if (product.original_price > 0 && product.price < product.original_price) {
-      return clamp(((product.original_price - product.price) /product.original_price) * 100);
+      return clamp(((product.original_price - product.price) / product.original_price) * 100);
     }
     return undefined;
   }, [product.discount, product.original_price, product.price]);
 
   const hasSale = product.original_price > 0 && product.price < product.original_price;
   const productLink = `/san-pham/${product.id}`;
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onView?.(product);
+  };
 
   return (
     <article
@@ -67,7 +48,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onView }) => {
     >
       {/* Hình ảnh */}
       <div className="relative aspect-square bg-gray-50 dark:bg-[#1a0b0b]">
-        <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/20 via-transparent to-white/10 z-10" />
+        {/* Lớp phủ gradient khi hover */}
+        <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/5 dark:bg-white/5 z-10" />
 
         <Link href={productLink} className="block h-full w-full">
           <img
@@ -92,32 +74,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onView }) => {
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="absolute left-3 right-3 bottom-3 z-30">
-          <div className="flex items-center justify-end gap-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-            {/* Nút Xem Nhanh */}
+        {/* Quick Actions (Chỉ còn nút Xem nhanh) */}
+        <div className="absolute left-3 right-3 bottom-3 z-30 pointer-events-none">
+          <div className="flex items-center justify-center opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
             <button
               type="button"
               onClick={handleQuickView}
-              className="h-10 w-10 rounded-xl bg-white/90 dark:bg-black/80 backdrop-blur border border-black/5 dark:border-white/15 grid place-items-center shadow-sm hover:scale-105 active:scale-95 transition text-black dark:text-white"
-              title="Xem nhanh"
+              className="pointer-events-auto h-10 px-4 rounded-xl bg-white/90 dark:bg-black/80 backdrop-blur border border-black/5 dark:border-white/15 flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition text-black dark:text-white"
+              title="Xem chi tiết"
             >
               <span className="material-symbols-outlined text-[20px]">visibility</span>
-            </button>
-
-            {/* Nút Thêm vào giỏ (Icon nhỏ) */}
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={isAdding}
-              className={`h-10 w-10 rounded-xl bg-red-600 text-white grid place-items-center shadow-sm hover:bg-red-700 active:scale-95 transition ${
-                isAdding ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
-              title="Thêm vào giỏ"
-            >
-              <span className={`material-symbols-outlined text-[20px] ${isAdding ? "animate-spin" : ""}`}>
-                {isAdding ? "refresh" : "add_shopping_cart"}
-              </span>
+              <span className="text-xs font-bold">Xem nhanh</span>
             </button>
           </div>
         </div>
@@ -152,21 +119,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onView }) => {
               </span>
             )}
           </div>
-
-          {/* Nút Mua (Lớn) */}
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={isAdding}
-            className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-bold bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-red-600 dark:hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-gray-200 dark:shadow-none active:scale-95 ${
-              isAdding ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
+          
+          {/* Nút Xem chi tiết (Thay thế nút Mua) */}
+          <Link 
+             href={productLink}
+             className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500 transition-colors flex items-center gap-1"
           >
-            <span className={`material-symbols-outlined text-[16px] ${isAdding ? "animate-spin" : ""}`}>
-              {isAdding ? "refresh" : "shopping_bag"}
-            </span>
-            {isAdding ? "Đang xử lý..." : "Mua"}
-          </button>
+            Chi tiết <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </Link>
         </div>
       </div>
     </article>

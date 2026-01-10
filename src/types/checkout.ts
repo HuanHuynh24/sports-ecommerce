@@ -4,7 +4,7 @@ export interface CartItem {
   variant: string;
   price: number;
   quantity: number;
-  image: string;
+  image_url: string;
 }
 
 export interface CheckoutFormData {

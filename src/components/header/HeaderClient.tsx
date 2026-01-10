@@ -24,16 +24,21 @@ export default function HeaderClient({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  
-  //State User
+
+  // State User
   const [username, setUsername] = useState<string | null>(initialUsername);
-  
-  //State Search
+
+  // State Search
   const [keyword, setKeyword] = useState("");
+
+  // --- NEW STATE: Quản lý trạng thái xác thực ---
+  // false: chưa check xong hoặc check thất bại -> HeaderCart sẽ KHÔNG fetch
+  // true: đã check xong và user hợp lệ -> HeaderCart sẽ fetch
+  const [isAuthVerified, setIsAuthVerified] = useState(false);
 
   //--- 1. LOGIC AUTHENTICATION ---
   useEffect(() => {
-    //A. Lấy user từ localStorage (Sync nhanh UI)
+    // A. Lấy user từ localStorage (Sync nhanh UI để tránh layout shift)
     const getUserFromStorage = (): string | null => {
       try {
         if (typeof window === "undefined") return null;
@@ -48,45 +53,54 @@ export default function HeaderClient({
       return null;
     };
 
-    //B. Gọi API kiểm tra Session thật
+    // B. Gọi API kiểm tra Session thật
     const verifySession = async () => {
       try {
         const user = await authService.getMe();
         if (user) {
           const displayName = user.username || user.name || "Khách hàng";
           setUsername(displayName);
-          
+
+          // Cập nhật lại localStorage nếu có thay đổi
           const storageData = JSON.stringify({ ...user, username: displayName });
           if (localStorage.getItem("user_info") !== storageData) {
-             localStorage.setItem("user_info", storageData);
+            localStorage.setItem("user_info", storageData);
           }
+
+          // QUAN TRỌNG: Đánh dấu đã xác thực thành công => Cho phép gọi API Cart
+          setIsAuthVerified(true);
         } else {
-           throw new Error("No user returned");
+          throw new Error("No user returned");
         }
       } catch (error) {
-        console.log(error)
+        // Token lỗi, hết hạn hoặc chưa đăng nhập
+        // console.log("Session invalid:", error);
         localStorage.removeItem("user_info");
         setUsername(null);
+        setIsAuthVerified(false); // Đảm bảo không gọi API Cart
       }
     };
 
-    //C. Hàm điều phối đồng bộ
-    const handleSync = (type: 'mount' | 'auth' | 'storage' | 'focus') => {
+    // C. Hàm điều phối đồng bộ
+    const handleSync = (type: "mount" | "auth" | "storage" | "focus") => {
+      // 1. Sync UI từ storage trước cho mượt
       const storageUser = getUserFromStorage();
       if (storageUser !== username) {
         setUsername(storageUser);
       }
-      if (type === 'mount' || type === 'focus') {
+
+      // 2. Kiểm tra server session khi mount hoặc focus lại tab
+      if (type === "mount" || type === "focus") {
         verifySession();
       }
     };
 
     //--- SETUP LISTENERS ---
-    handleSync('mount');
+    handleSync("mount");
 
-    const onAuthChanged = () => handleSync('auth');
-    const onStorage = () => handleSync('storage');
-    const onFocus = () => handleSync('focus');
+    const onAuthChanged = () => handleSync("auth");
+    const onStorage = () => handleSync("storage");
+    const onFocus = () => handleSync("focus");
 
     window.addEventListener("auth:changed", onAuthChanged);
     window.addEventListener("storage", onStorage);
@@ -97,7 +111,8 @@ export default function HeaderClient({
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
     };
-  }, [username]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   //--- 2. LOGIC SEARCH ---
   const handleSearch = () => {
@@ -125,19 +140,24 @@ export default function HeaderClient({
 
   return (
     <header className="w-full bg-white dark:bg-[#1e0e0e] shadow-lg shadow-gray-100/50 dark:shadow-none sticky top-0 z-50">
-      
       {/* Top Bar */}
       <div className="w-full bg-white border-b border-gray-100 dark:bg-[#2a1515] dark:border-[#3d2020]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-1.5 flex justify-between items-center text-xs sm:text-sm font-medium">
           <div className="flex items-center gap-6 text-[#555] dark:text-[#ccc]">
-            <a href="tel:19006868" className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer group">
+            <a
+              href="tel:19006868"
+              className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer group"
+            >
               <span className="material-symbols-outlined text-[18px] text-primary group-hover:scale-110 transition-transform">
                 phone_in_talk
               </span>
               Hotline: <span className="font-bold">1900 6868</span>
             </a>
             <span className="hidden sm:inline w-[1px] h-3 bg-gray-300 dark:bg-[#444]"></span>
-            <Link href="/he-thong-cua-hang" className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer group">
+            <Link
+              href="/he-thong-cua-hang"
+              className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer group"
+            >
               <span className="material-symbols-outlined text-[18px] text-primary group-hover:scale-110 transition-transform">
                 storefront
               </span>
@@ -146,7 +166,10 @@ export default function HeaderClient({
           </div>
 
           <div className="flex items-center gap-4 text-[#555] dark:text-[#ccc]">
-            <Link className="hover:text-primary transition-colors hidden sm:block" href="/tai-khoan/don-hang">
+            <Link
+              className="hover:text-primary transition-colors hidden sm:block"
+              href="/tai-khoan/don-hang"
+            >
               Tra cứu đơn hàng
             </Link>
             <span className="hidden sm:block w-[1px] h-3 bg-gray-300 dark:bg-[#444]"></span>
@@ -159,10 +182,13 @@ export default function HeaderClient({
                 title="Tài khoản cá nhân"
               >
                 <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    person
+                  </span>
                 </div>
                 <span className="truncate max-w-[150px]">
-                  Xin chào, <span className="text-primary font-bold">{username}</span>
+                  Xin chào,{" "}
+                  <span className="text-primary font-bold">{username}</span>
                 </span>
               </Link>
             ) : (
@@ -170,7 +196,9 @@ export default function HeaderClient({
                 className="hover:text-primary transition-colors flex items-center gap-1.5"
                 href="/dang-nhap"
               >
-                <span className="material-symbols-outlined text-[18px]">login</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  login
+                </span>
                 Đăng nhập
               </Link>
             )}
@@ -184,8 +212,16 @@ export default function HeaderClient({
         {/* LOGO */}
         <Link className="flex items-center gap-2 group flex-shrink-0" href="/">
           <div className="w-12 h-12 text-primary">
-            <svg className="w-full h-full drop-shadow-sm" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+            <svg
+              className="w-full h-full drop-shadow-sm"
+              fill="none"
+              viewBox="0 0 48 48"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
+                fill="currentColor"
+              ></path>
             </svg>
           </div>
           <div className="flex flex-col">
@@ -208,7 +244,7 @@ export default function HeaderClient({
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <button 
+            <button
               onClick={handleSearch}
               className="bg-primary text-white px-6 flex items-center justify-center hover:bg-red-700 transition-colors group"
               aria-label="Tìm kiếm"
@@ -220,9 +256,9 @@ export default function HeaderClient({
           </div>
         </div>
 
-        {/* CART */}
+        {/* CART: Truyền prop enableFetch để kiểm soát việc gọi API */}
         <div className="flex items-center gap-4 flex-shrink-0">
-          <HeaderCart />
+          <HeaderCart enableFetch={isAuthVerified} />
         </div>
       </div>
 
@@ -237,13 +273,19 @@ export default function HeaderClient({
             </li>
 
             <li className="flex-1 text-center">
-              <Link className={navLinkClass("/vot-cau-long")} href="/vot-cau-long">
+              <Link
+                className={navLinkClass("/vot-cau-long")}
+                href="/vot-cau-long"
+              >
                 Vợt Cầu Lông
               </Link>
             </li>
 
             <li className="flex-1 text-center">
-              <Link className={navLinkClass("/giay-the-thao")} href="/giay-the-thao">
+              <Link
+                className={navLinkClass("/giay-the-thao")}
+                href="/giay-the-thao"
+              >
                 Giày Thể Thao
               </Link>
             </li>
