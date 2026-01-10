@@ -2,11 +2,9 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { cartService } from "@/services/cart.service"; // Đảm bảo đường dẫn đúng
-// import { toast } from 'react-hot-toast'; // Bật nếu dùng toast
+import { cartService } from "@/services/cart.service";
 
-// --- 1. ĐỊNH NGHĨA TYPES (Dựa trên JSON thực tế) ---
-
+// --- 1. ĐỊNH NGHĨA TYPES ---
 export interface Attribute {
   name: string;
   value: string;
@@ -18,8 +16,8 @@ export interface Variant {
   price: number;
   stock_qty: number;
   is_in_stock: boolean;
-  image: string | null; // Có thể null
-  attributes: Attribute[]; // Có thể rỗng []
+  image: string | null;
+  attributes: Attribute[];
 }
 
 export interface RelatedProduct {
@@ -64,14 +62,10 @@ export default function ProductDetailView({
   const [isAdding, setIsAdding] = useState(false);
 
   // State cho biến thể CÓ thuộc tính (Size, Color...)
-  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>(
-    {}
-  );
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
 
   // State cho biến thể KHÔNG thuộc tính (Chọn trực tiếp ID)
-  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
-    null
-  );
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
 
   // --- COMPUTED LOGIC ---
 
@@ -82,7 +76,7 @@ export default function ProductDetailView({
     );
   }, [product.variants]);
 
-  // 2. Lấy danh sách tên thuộc tính (nếu có)
+  // 2. Lấy danh sách tên thuộc tính để render nút chọn
   const attributeNames = useMemo(() => {
     if (!hasAttributes) return [];
     const names = new Set<string>();
@@ -97,26 +91,23 @@ export default function ProductDetailView({
     if (!product.variants || product.variants.length === 0) return null;
 
     if (hasAttributes) {
-      // Logic cũ: Tìm theo attributes khớp nhau
       return product.variants.find((v) =>
         Object.entries(selectedAttrs).every(([key, value]) =>
           v.attributes.find((a) => a.name === key && a.value === value)
         )
       );
     } else {
-      // Logic mới: Tìm theo ID đã chọn thủ công
       return product.variants.find((v) => v.id === selectedVariantId) || null;
     }
   }, [product.variants, selectedAttrs, selectedVariantId, hasAttributes]);
 
-  // 4. Lấy thông tin hiển thị (Giá, Kho)
+  // 4. Thông tin hiển thị
   const displayPrice = currentVariant ? currentVariant.price : product.price;
   const maxStock = currentVariant ? currentVariant.stock_qty : 0;
   const isOutOfStock = currentVariant ? maxStock === 0 : false;
 
   // --- EFFECTS ---
 
-  // Effect 1: Chọn mặc định biến thể đầu tiên còn hàng khi load trang
   useEffect(() => {
     if (product.variants && product.variants.length > 0) {
       const defaultVariant =
@@ -136,13 +127,10 @@ export default function ProductDetailView({
     }
   }, [product.variants, hasAttributes]);
 
-  // Effect 2: Tự động đổi ảnh khi chọn biến thể (Nếu biến thể có ảnh)
   useEffect(() => {
     if (currentVariant && currentVariant.image) {
       setActiveImage(currentVariant.image);
     }
-    // Nếu muốn revert về ảnh gốc khi variant ko có ảnh thì bỏ comment dòng dưới:
-    // else { setActiveImage(product.thumbnail); }
   }, [currentVariant]);
 
   // --- HANDLERS ---
@@ -156,7 +144,6 @@ export default function ProductDetailView({
       alert("Vui lòng chọn phiên bản sản phẩm!");
       return;
     }
-    // Logic check login ở đây nếu cần
 
     setIsAdding(true);
     try {
@@ -165,9 +152,7 @@ export default function ProductDetailView({
         quantity: quantity,
       };
       await cartService.addToCart(payload);
-
       alert("Đã thêm vào giỏ hàng thành công!");
-      // toast.success("Thêm thành công!");
     } catch (error: any) {
       console.error("Lỗi thêm giỏ hàng:", error);
       const message =
@@ -180,7 +165,6 @@ export default function ProductDetailView({
 
   // --- RENDER HELPERS ---
 
-  // A. Render khi có thuộc tính (Size, Màu)
   const renderAttributeSelector = (attrName: string) => {
     const possibleValues = Array.from(
       new Set(
@@ -220,9 +204,7 @@ export default function ProductDetailView({
     );
   };
 
-  // B. Render khi KHÔNG có thuộc tính (JSON attributes: []) -> Chọn theo ID/SKU
   const renderVariantSelector = () => {
-    // Nếu chỉ có 1 biến thể duy nhất thì không cần hiển thị nút chọn
     if (product.variants.length <= 1) return null;
 
     return (
@@ -242,8 +224,8 @@ export default function ProductDetailView({
                   px-4 py-2 rounded-lg text-sm font-medium border transition-all flex flex-col items-center min-w-[80px]
                   ${
                     isSelected
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-md" // Style Active
-                      : "border-gray-200 bg-white text-gray-700 hover:border-[var(--color-primary)] dark:bg-white/5 dark:border-white/10 dark:text-gray-300" // Style Inactive
+                      ? "border-red-600 bg-red-600 text-white shadow-md"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-red-600 dark:bg-white/5 dark:border-white/10 dark:text-gray-300"
                   }
                   ${
                     isOutOfStockVariant
@@ -254,7 +236,7 @@ export default function ProductDetailView({
               >
                 <span className="font-bold">{v.sku}</span>
                 <span className="text-[10px] opacity-80 mt-1">
-                  {isOutOfStockVariant ? "Hết hàng" : `Còn ${v.stock_qty}`}
+                  {isOutOfStockVariant ? "Hết hàng" : `Kho: ${v.stock_qty}`}
                 </span>
               </button>
             );
@@ -264,13 +246,52 @@ export default function ProductDetailView({
     );
   };
 
+  // --- MỚI: Hàm hiển thị chi tiết thuộc tính của Variant đã chọn ---
+  const renderSelectedVariantInfo = () => {
+    if (!currentVariant) return null;
+    
+    // Nếu variant không có attributes thì không cần hiện bảng này
+    if (!currentVariant.attributes || currentVariant.attributes.length === 0) return null;
+
+    return (
+      <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/10">
+        <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+          <span className="material-symbols-outlined text-base">info</span>
+          Thông tin chi tiết phiên bản:
+        </h4>
+        <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+          {/* Hiển thị SKU */}
+          <div className="flex justify-between text-sm border-b border-dashed border-gray-200 dark:border-gray-700 pb-1">
+            <span className="text-gray-500">Mã SKU</span>
+            <span className="font-medium text-gray-900 dark:text-white">{currentVariant.sku}</span>
+          </div>
+          
+          {/* Loop qua tất cả attributes của variant đang chọn */}
+          {currentVariant.attributes.map((attr, index) => (
+            <div key={index} className="flex justify-between text-sm border-b border-dashed border-gray-200 dark:border-gray-700 pb-1">
+              <span className="text-gray-500 capitalize">{attr.name}</span>
+              <span className="font-medium text-gray-900 dark:text-white">{attr.value}</span>
+            </div>
+          ))}
+
+          {/* Hiển thị tồn kho */}
+          <div className="flex justify-between text-sm pt-1">
+            <span className="text-gray-500">Tồn kho</span>
+            <span className={`font-medium ${currentVariant.stock_qty > 0 ? 'text-green-600' : 'text-red-500'}`}>
+               {currentVariant.stock_qty > 0 ? `${currentVariant.stock_qty} sản phẩm` : 'Hết hàng'}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         {/* --- LEFT: GALLERY --- */}
-        {/* --- LEFT: GALLERY (Đã sửa lỗi hiển thị ảnh null) --- */}
         <div className="lg:col-span-7 space-y-4">
-          {/* 1. ẢNH CHÍNH (MAIN IMAGE) */}
+          {/* Main Image */}
           <div className="aspect-square relative bg-white dark:bg-[#120707] rounded-2xl border border-black/5 dark:border-white/10 overflow-hidden flex items-center justify-center p-6 shadow-sm">
             {activeImage ? (
               <img
@@ -279,50 +300,32 @@ export default function ProductDetailView({
                 className="w-full h-full object-contain transition-transform duration-500 hover:scale-105"
               />
             ) : (
-              // Fallback: Hiển thị box xám khi activeImage là null
               <div className="w-full h-full bg-gray-200 dark:bg-white/10 flex flex-col items-center justify-center text-gray-400">
-                <span className="material-symbols-outlined text-4xl mb-2">
-                  image_not_supported
-                </span>
+                <span className="material-symbols-outlined text-4xl mb-2">image_not_supported</span>
                 <span className="text-sm font-medium">Không có ảnh</span>
               </div>
             )}
           </div>
 
-          {/* 2. DANH SÁCH THUMBNAIL (Sửa lỗi mapping) */}
+          {/* Thumbnails */}
           <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-            {/* Tạo mảng gồm Thumbnail gốc + Các ảnh phụ từ mảng images */}
             {[
               { id: "thumb-main", url: product.thumbnail },
-              ...(product.images || []).map((img) => ({
-                id: img.id,
-                url: img.url,
-              })),
+              ...(product.images || []).map((img) => ({ id: img.id, url: img.url })),
             ].map((item, idx) => (
               <button
                 key={item.id || idx}
                 onClick={() => setActiveImage(item.url)}
                 className={`
-            relative w-20 h-20 shrink-0 rounded-xl border-2 overflow-hidden 
-            ${
-              activeImage === item.url
-                ? "border-black dark:border-white ring-1 ring-black/10"
-                : "border-transparent hover:border-gray-300"
-            }
-          `}
+                  relative w-20 h-20 shrink-0 rounded-xl border-2 overflow-hidden 
+                  ${activeImage === item.url ? "border-black dark:border-white ring-1 ring-black/10" : "border-transparent hover:border-gray-300"}
+                `}
               >
                 {item.url ? (
-                  <img
-                    src={item.url}
-                    alt={`Thumb ${idx}`}
-                    className="w-full h-full object-contain bg-white dark:bg-[#120707]"
-                  />
+                  <img src={item.url} alt={`Thumb ${idx}`} className="w-full h-full object-contain bg-white dark:bg-[#120707]" />
                 ) : (
-                  // Fallback: Thumbnail xám nếu url trong json là null
                   <div className="w-full h-full bg-gray-200 dark:bg-white/10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-gray-400 text-lg">
-                      image
-                    </span>
+                    <span className="material-symbols-outlined text-gray-400 text-lg">image</span>
                   </div>
                 )}
               </button>
@@ -332,7 +335,6 @@ export default function ProductDetailView({
 
         {/* --- RIGHT: INFO --- */}
         <div className="lg:col-span-5 flex flex-col h-full">
-          {/* Breadcrumb */}
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-bold uppercase text-blue-600 tracking-wider">
               {product.brand?.name}
@@ -347,10 +349,7 @@ export default function ProductDetailView({
             {product.name}
           </h1>
           <div className="text-sm text-gray-500 mb-6">
-            Mã SP:{" "}
-            <span className="font-mono text-gray-700 dark:text-gray-300">
-              {product.sku}
-            </span>
+            Mã SP: <span className="font-mono text-gray-700 dark:text-gray-300">{product.sku}</span>
           </div>
 
           {/* Price */}
@@ -365,12 +364,15 @@ export default function ProductDetailView({
             )}
           </div>
 
-          {/* Selectors (Logic kép) */}
-          <div className="mb-6">
+          {/* Selectors */}
+          <div className="mb-4">
             {hasAttributes
               ? attributeNames.map((name) => renderAttributeSelector(name))
               : renderVariantSelector()}
           </div>
+
+          {/* --- NEW: Hiển thị bảng thông tin Attributes của Variant đã chọn --- */}
+          {renderSelectedVariantInfo()}
 
           {/* Action Buttons */}
           <div className="mt-auto">
@@ -395,17 +397,6 @@ export default function ProductDetailView({
                   +
                 </button>
               </div>
-              {currentVariant && (
-                <span
-                  className={`text-xs font-medium ${
-                    isOutOfStock ? "text-red-500" : "text-green-600"
-                  }`}
-                >
-                  {isOutOfStock
-                    ? "(Tạm hết hàng)"
-                    : `(Sẵn có ${maxStock} sản phẩm)`}
-                </span>
-              )}
             </div>
 
             <div className="flex gap-3">
@@ -420,33 +411,15 @@ export default function ProductDetailView({
               >
                 {isAdding ? (
                   <>
-                    <svg
-                      className="animate-spin h-5 w-5 text-current"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                    <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     <span>Đang xử lý...</span>
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined">
-                      shopping_bag
-                    </span>
+                    <span className="material-symbols-outlined">shopping_bag</span>
                     {isOutOfStock ? "Hết hàng" : "Thêm vào giỏ"}
                   </>
                 )}
@@ -463,16 +436,12 @@ export default function ProductDetailView({
             <h3 className="font-bold text-black dark:text-white mb-2 uppercase text-xs">
               Mô tả sản phẩm
             </h3>
-            <div
-              dangerouslySetInnerHTML={{
-                __html: product.description || "<p>Đang cập nhật...</p>",
-              }}
-            />
+            <div dangerouslySetInnerHTML={{ __html: product.description || "<p>Đang cập nhật...</p>" }} />
           </div>
         </div>
       </div>
 
-      {/* --- SECTION: RELATED PRODUCTS --- */}
+      {/* --- RELATED PRODUCTS --- */}
       {product.related_products && product.related_products.length > 0 && (
         <div className="mt-16 pt-10 border-t border-gray-200 dark:border-white/10">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -480,34 +449,22 @@ export default function ProductDetailView({
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {product.related_products.map((item) => (
-              <Link
-                href={`/product/${item.id}`}
-                key={item.id}
-                className="group block"
-              >
+              <Link href={`/product/${item.id}`} key={item.id} className="group block">
                 <div className="aspect-square bg-gray-100 dark:bg-white/5 rounded-xl overflow-hidden mb-3 border border-transparent group-hover:border-black/10 dark:group-hover:border-white/20 transition relative">
                   {item.discount_rate > 0 && (
                     <span className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">
                       -{item.discount_rate}%
                     </span>
                   )}
-                  <img
-                    src={item.thumbnail}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                  />
+                  <img src={item.thumbnail} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
                 </div>
                 <h3 className="font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition">
                   {item.name}
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="font-bold text-red-600">
-                    {formatCurrency(item.price)}
-                  </span>
+                  <span className="font-bold text-red-600">{formatCurrency(item.price)}</span>
                   {item.original_price > item.price && (
-                    <span className="text-xs text-gray-400 line-through">
-                      {formatCurrency(item.original_price)}
-                    </span>
+                    <span className="text-xs text-gray-400 line-through">{formatCurrency(item.original_price)}</span>
                   )}
                 </div>
               </Link>
