@@ -43,6 +43,20 @@ export const authService = {
     return axiosClient.post("/auth/google/redirect");
   },
 
+  forgotPassword: (email: string) => {
+    return axiosClient.post("/auth/forgot-password", { email });
+  },
+
+  // Đặt lại mật khẩu mới (kèm token và email)
+  resetPassword: (payload: {
+    token: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }) => {
+    return axiosClient.post("/auth/reset-password", payload);
+  },
+
   getMe: async (): Promise<UserProfile | null> => {
     try {
       //Gọi API GET. Trình duyệt tự động gửi Cookie đi kèm.
