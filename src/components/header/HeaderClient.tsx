@@ -146,7 +146,7 @@ export default function HeaderClient({
           </div>
 
           <div className="flex items-center gap-4 text-[#555] dark:text-[#ccc]">
-            <Link className="hover:text-primary transition-colors hidden sm:block" href="/tra-cuu-don-hang">
+            <Link className="hover:text-primary transition-colors hidden sm:block" href="/tai-khoan/don-hang">
               Tra cứu đơn hàng
             </Link>
             <span className="hidden sm:block w-[1px] h-3 bg-gray-300 dark:bg-[#444]"></span>

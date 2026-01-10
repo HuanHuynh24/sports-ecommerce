@@ -114,4 +114,10 @@ export const orderService = {
       } as OrderListResponse;
     }
   },
+
+  createVnpayUrl: async (orderCode: string) => {
+    return axiosClient.post("/orders/payment/vnpay/create-url", {
+      order_code: orderCode
+    });
+  },
 };
