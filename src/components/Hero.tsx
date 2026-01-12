@@ -16,7 +16,7 @@ const Hero: React.FC = () => {
           <div className="max-w-[800px] transform transition-transform duration-700 ease-out group-hover:translate-x-4 group-hover:-translate-y-2">
             <div className="inline-block mb-4 overflow-hidden rounded-r-full">
               <div className="bg-gradient-to-r from-primary to-orange-600 text-white font-bold text-sm md:text-base px-6 py-2 uppercase tracking-widest shadow-lg transform -skew-x-12 origin-left">
-                <span className="inline-block skew-x-12">Bộ sưu tập mới 2024</span>
+                <span className="inline-block skew-x-12">Bộ sưu tập mới 2026</span>
               </div>
             </div>
             
