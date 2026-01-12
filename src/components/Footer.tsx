@@ -65,7 +65,7 @@ const Footer: React.FC = () => {
       </div>
       <div className="bg-primary py-4">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-3 text-xs font-medium text-white/90">
-          <p>© 2024 Công ty Cổ phần SportsShop Việt Nam.</p>
+          <p>© 2026 Công ty Cổ phần SportsShop Việt Nam.</p>
           <div className="flex items-center gap-6">
             <span>MST: 0101234567</span>
             <span className="hidden sm:inline">|</span>
