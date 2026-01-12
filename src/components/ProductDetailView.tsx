@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-// Thay thế cartService bằng useCartStore
 import { useCartStore } from "@/hooks/useCart";
 
 // --- 1. ĐỊNH NGHĨA TYPES ---
@@ -58,10 +57,8 @@ export default function ProductDetailView({
   product: ProductDetail;
 }) {
   // --- STORE ---
-  // 1. Lấy hàm addToCart từ store
   const addToCart = useCartStore((state) => state.addToCart);
-  
-  // 2. Lấy trạng thái loading từ store (đồng bộ với Card)
+  // Lấy trạng thái loading từ store dựa trên ID sản phẩm cha
   const isAdding = useCartStore((state) => !!state.loadingItems[product.id]);
 
   // --- STATE ---
@@ -145,24 +142,14 @@ export default function ProductDetailView({
       return;
     }
     
-    // Nếu đang thêm chính sản phẩm này thì chặn lại
     if (isAdding) return;
 
-    // Gọi hàm addToCart từ Store
-    // Lưu ý: Store cần xử lý logic nhận thêm variant_id và quantity
-    // Nếu Store chưa hỗ trợ tham số thứ 2, 3, bạn cần truyền object
-    // Ở đây tôi giả định bạn sẽ truyền object mở rộng hoặc cập nhật Store
-    const payload = {
-        ...product, // Truyền thông tin cơ bản để hiển thị optimist (nếu store cần)
-        id: product.id,
-        variant_id: currentVariant.id, // ID biến thể
-        quantity: quantity // Số lượng
-    };
-
-    // Gọi store (giả định store xử lý được payload này hoặc bạn sửa store để nhận params)
-    // Nếu store chỉ nhận (product), bạn cần sửa store để nhận thêm variants
-    // Dưới đây là cách gọi an toàn truyền dữ liệu qua
-    await addToCart(payload as any); 
+    // GỌI HÀM: Truyền object đúng chuẩn interface AddToCartPayload
+    await addToCart({
+        product: product,             // Để store dùng làm key loading
+        variant_id: currentVariant.id, // ID biến thể thực tế
+        quantity: quantity            // Số lượng
+    });
   };
 
   // --- RENDER HELPERS ---
