@@ -9,7 +9,7 @@ export default function HeroPanel() {
       className="hidden lg:flex lg:w-1/2 relative flex-col justify-center p-12 xl:p-20 bg-cover bg-center group"
       style={{ backgroundImage: `url("${bgUrl}")` }}
     >
-      <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent/>
+      <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
 
       <div className="relative z-10 flex flex-col gap-4 max-w-lg">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/90 text-white w-fit text-xs font-bold uppercase tracking-wider mb-2">

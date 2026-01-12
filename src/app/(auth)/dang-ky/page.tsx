@@ -26,9 +26,9 @@ import SocialButtons from "@/components/page/dang-ky/SocialButtons";
 function Divider({ text }: { text: string }) {
   return (
     <div className="relative flex py-2 items-center">
-      <div className="grow border-t border-gray-200 dark:border-gray-700/>
+      <div className="grow border-t border-gray-200 dark:border-gray-700" />
       <span className="shrink-0 mx-4 text-gray-400 text-sm">{text}</span>
-      <div className="grow border-t border-gray-200 dark:border-gray-700/>
+      <div className="grow border-t border-gray-200 dark:border-gray-700" />
     </div>
   );
 }
@@ -247,7 +247,7 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            <Divider text="Hoặc đăng ký bằng/>
+            <Divider text="Hoặc đăng ký bằng" />
             <SocialButtons />
 
             <div className="mt-2 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 gap-2">

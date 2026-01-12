@@ -27,6 +27,7 @@ export default function HeaderClient({
 
   // State User
   const [username, setUsername] = useState<string | null>(initialUsername);
+  const [avatar, setAvatar] = useState<string | null>(null);
 
   // State Search
   const [keyword, setKeyword] = useState("");
@@ -37,15 +38,20 @@ export default function HeaderClient({
   const [isAuthVerified, setIsAuthVerified] = useState(false);
 
   //--- 1. LOGIC AUTHENTICATION ---
+  //--- 1. LOGIC AUTHENTICATION ---
   useEffect(() => {
-    // A. Lấy user từ localStorage (Sync nhanh UI để tránh layout shift)
-    const getUserFromStorage = (): string | null => {
+    // A. Lấy user từ localStorage
+    // SỬA: Bỏ khai báo type cụ thể, để TS tự nhận diện object trả về
+    const getUserFromStorage = () => {
       try {
         if (typeof window === "undefined") return null;
         const stored = localStorage.getItem("user_info");
         if (stored) {
           const parsed = JSON.parse(stored);
-          return parsed?.username || parsed?.name || null;
+          return {
+            name: parsed?.username || parsed?.name || null,
+            avatar: parsed?.avatar || parsed?.avatar_url || null,
+          };
         }
       } catch (e) {
         return null;
@@ -59,37 +65,48 @@ export default function HeaderClient({
         const user = await authService.getMe();
         if (user) {
           const displayName = user.username || user.name || "Khách hàng";
-          setUsername(displayName);
+          const userAvatar = user.avatar || user.avatar_url || null;
 
-          // Cập nhật lại localStorage nếu có thay đổi
-          const storageData = JSON.stringify({ ...user, username: displayName });
+          setUsername(displayName);
+          setAvatar(userAvatar);
+
+          // Cập nhật lại localStorage
+          const storageData = JSON.stringify({
+            ...user,
+            username: displayName,
+            avatar: userAvatar,
+          });
           if (localStorage.getItem("user_info") !== storageData) {
             localStorage.setItem("user_info", storageData);
           }
 
-          // QUAN TRỌNG: Đánh dấu đã xác thực thành công => Cho phép gọi API Cart
           setIsAuthVerified(true);
         } else {
           throw new Error("No user returned");
         }
       } catch (error) {
-        // Token lỗi, hết hạn hoặc chưa đăng nhập
-        // console.log("Session invalid:", error);
         localStorage.removeItem("user_info");
         setUsername(null);
-        setIsAuthVerified(false); // Đảm bảo không gọi API Cart
+        setAvatar(null);
+        setIsAuthVerified(false);
       }
     };
 
     // C. Hàm điều phối đồng bộ
     const handleSync = (type: "mount" | "auth" | "storage" | "focus") => {
-      // 1. Sync UI từ storage trước cho mượt
-      const storageUser = getUserFromStorage();
-      if (storageUser !== username) {
-        setUsername(storageUser);
+      const storageData = getUserFromStorage(); // Đổi tên biến cho rõ nghĩa
+
+      // 1. Sync Name (SỬA: truy cập vào .name)
+      if (storageData?.name !== username) {
+        setUsername(storageData?.name || null);
       }
 
-      // 2. Kiểm tra server session khi mount hoặc focus lại tab
+      // 2. Sync Avatar (SỬA: kiểm tra storageData tồn tại trước khi lấy .avatar)
+      if (storageData?.avatar !== avatar) {
+        setAvatar(storageData?.avatar || null);
+      }
+
+      // 3. Kiểm tra server session
       if (type === "mount" || type === "focus") {
         verifySession();
       }
@@ -181,11 +198,19 @@ export default function HeaderClient({
                 href="/tai-khoan"
                 title="Tài khoản cá nhân"
               >
-                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined text-[16px]">
-                    person
-                  </span>
-                </div>
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    alt={username || "User"}
+                    className="w-6 h-6 rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[16px]">
+                      person
+                    </span>
+                  </div>
+                )}
                 <span className="truncate max-w-[150px]">
                   Xin chào,{" "}
                   <span className="text-primary font-bold">{username}</span>
