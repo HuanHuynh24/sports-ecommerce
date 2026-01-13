@@ -94,10 +94,7 @@ export default function CheckoutPage() {
     }
     if (
       !formData.fullName.trim() ||
-      !formData.address.trim() ||
-      !formData.province ||
-      !formData.district ||
-      !formData.ward
+      !formData.address.trim()
     ) {
       toast.error("Vui lòng điền đầy đủ tên và địa chỉ giao hàng.");
       return;
@@ -116,7 +113,7 @@ export default function CheckoutPage() {
     const toastId = toast.loading("Đang xử lý đơn hàng...");
 
     try {
-      const fullAddress = `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`;
+      const fullAddress = `${formData.address}`;
 
       const payload = {
         receiver_name: formData.fullName,
