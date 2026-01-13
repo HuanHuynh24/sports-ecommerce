@@ -11,9 +11,6 @@ export default function ContactInfo({ data, onChange }: Props) {
     <section className="flex flex-col gap-5">
       <div className="flex justify-between items-center">
         <h2 className="text-lg md:text-xl font-bold">Contact Information</h2>
-        <span className="text-sm text-gray-500">
-          Have an account? <Link href="/login" className="text-red-600 font-medium hover:underline">Log in</Link>
-        </span>
       </div>
       <div className="space-y-3">
         <input
