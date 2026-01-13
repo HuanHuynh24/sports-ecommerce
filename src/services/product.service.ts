@@ -15,4 +15,12 @@ export const productService = {
       .get<ApiResponse<ProductDetail>>(`/products/${id}`)
       .then((res) => res.data);
   },
+
+  getBrands: async () => {
+    return axiosClient.get("/brands"); 
+  },
+
+  getCategories: async () => {
+    return axiosClient.get("/categories");
+  },
 };

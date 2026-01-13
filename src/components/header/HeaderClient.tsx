@@ -64,8 +64,8 @@ export default function HeaderClient({
       try {
         const user = await authService.getMe();
         if (user) {
-          const displayName = user.username || user.name || "Khách hàng";
-          const userAvatar = user.avatar || user.avatar_url || null;
+          const displayName = user.name || "Khách hàng";
+          const userAvatar = user.avatar_url || null;
 
           setUsername(displayName);
           setAvatar(userAvatar);
